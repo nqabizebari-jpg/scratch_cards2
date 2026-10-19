@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سیستەمێ عەمبارا کارتێن خەزینەیێ | Safe Card Inventory</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- SheetJS for Excel Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-full flex flex-col text-slate-800 antialiased selection:bg-blue-600 selection:text-white">
+
+  <!-- ==================== LOGIN VIEW ==================== -->
+  <div id="login-view" class="min-h-screen flex items-center justify-center bg-slate-900 px-4 py-12 relative overflow-hidden">
+    <!-- Language Switcher in Login -->
+    <div class="absolute top-6 left-6 z-20">
+      <select id="login-lang-select" onchange="changeLanguage(this.value)"
+        class="bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option value="ku">کوردی (Badînî)</option>
+        <option value="ar">العربية</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+
+    <!-- Glowing accents -->
+    <div class="absolute -top-40 -right-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-md w-full space-y-8 bg-slate-800/90 border border-slate-700 p-8 rounded-2xl shadow-2xl relative z-10 backdrop-blur-xl">
+      <div class="text-center space-y-3">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-lg shadow-blue-500/30 text-white mb-2">
+          <i data-lucide="shield-check" class="w-8 h-8"></i>
+        </div>
+        <h2 class="text-2xl font-bold tracking-tight text-white" data-i18n="app_title">سیستەمێ عەمبارا کارتێن خەزینەیێ</h2>
+        <p class="text-sm text-slate-400" data-i18n="app_subtitle">تۆمارکرن و چاڤدێریکردنا کارتێن مۆبایل و ئینتەرنێتێ د خەزینەیێ دا ب شێوەیەکێ دەمەکی (Real-Time)</p>
+      </div>
+
+      <div id="login-error" class="hidden p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm flex items-center gap-2">
+        <i data-lucide="alert-circle" class="w-5 h-5 flex-shrink-0"></i>
+        <span id="login-error-text"></span>
+      </div>
+
+      <form id="login-form" class="mt-8 space-y-5">
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5" data-i18n="username">ناڤێ بکارئینەری (Username)</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+              <i data-lucide="user" class="w-5 h-5"></i>
+            </span>
+            <input type="text" id="username" required dir="ltr"
+              class="w-full pr-10 pl-4 py-2.5 bg-slate-900/80 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm transition"
+              placeholder="supervisor or operator">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5" data-i18n="password">تێپەڕەوشە (Password)</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+              <i data-lucide="lock" class="w-5 h-5"></i>
+            </span>
+            <input type="password" id="password" required dir="ltr"
+              class="w-full pr-10 pl-4 py-2.5 bg-slate-900/80 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm transition"
+              placeholder="••••••••">
+          </div>
+        </div>
+
+        <button type="submit" id="login-btn"
+          class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-600/30 transition">
+          <span data-i18n="login_button">چوونەژوورێ (Login)</span>
+          <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Quick Fill Buttons -->
+        <div class="pt-4 border-t border-slate-700/60 text-center">
+          <p class="text-xs text-slate-400 mb-2.5" data-i18n="quick_login_hint">کلیک بکە بۆ چوونەژوورێ یا بلەز:</p>
+          <div class="flex items-center justify-center gap-2">
+            <button type="button" onclick="fillCredentials('supervisor', 'admin123')"
+              class="text-xs px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-blue-300 transition border border-slate-600" data-i18n="user_1_btn">
+              بکارئینەرێ 1 (User 1)
+            </button>
+            <button type="button" onclick="fillCredentials('operator', 'user123')"
+              class="text-xs px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-emerald-300 transition border border-slate-600" data-i18n="user_2_btn">
+              بکارئینەرێ 2 (User 2)
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN APPLICATION VIEW ==================== -->
+  <div id="app-view" class="hidden min-h-screen flex flex-col bg-slate-100">
+    <!-- TOP NAVIGATION HEADER -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <!-- Logo & Title -->
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+              <i data-lucide="vault" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight" data-i18n="app_title">عەمبارا کارتێن خەزینەیێ</h1>
+                <!-- Live Connection Badge -->
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm">
+                  <span class="live-pulse"></span>
+                  <span class="text-[11px] font-semibold">Real-Time</span>
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 hidden sm:block">Safe Inventory Management</p>
+            </div>
+          </div>
+
+          <!-- Controls: Language, Share Point, Profile, Logout -->
+          <div class="flex items-center gap-2 sm:gap-3">
+            <!-- Language Switcher -->
+            <select id="app-lang-select" onchange="changeLanguage(this.value)"
+              class="text-xs bg-slate-100 border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="ku">کوردی</option>
+              <option value="ar">العربية</option>
+              <option value="en">English</option>
+            </select>
+
+            
+
+            <!-- User Profile Button (Click to edit credentials) -->
+            <button onclick="openModal('profile-modal')" title="گۆهۆڕینا ناڤ و پاسوۆردی"
+              class="flex items-center gap-2 p-1 sm:px-3 sm:py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition text-right">
+              <div class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs uppercase" id="user-avatar">
+                U
+              </div>
+              <div class="hidden sm:block text-right">
+                <div class="text-xs font-bold text-slate-800 leading-tight" id="user-display-name">سەرپەرشتیار</div>
+                <div class="text-[10px] text-blue-600 font-semibold flex items-center gap-1">
+                  <i data-lucide="key" class="w-2.5 h-2.5"></i>
+                  <span data-i18n="edit_profile">گۆهۆڕینا هەژمارێ</span>
+                </div>
+              </div>
+            </button>
+
+            <!-- Logout Button -->
+            <button onclick="logout()" title="دەرکەفتن"
+              class="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition border border-transparent hover:border-rose-100">
+              <i data-lucide="log-out" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- NAVIGATION TABS -->
+        <nav class="flex space-x-1 space-x-reverse -mb-px border-t border-slate-100 overflow-x-auto py-1">
+          <button onclick="switchTab('dashboard')" id="tab-btn-dashboard"
+            class="tab-btn active inline-flex items-center gap-2 px-4 py-2.5 border-b-2 border-blue-600 text-blue-600 text-sm font-semibold">
+            <i data-lucide="layout-grid" class="w-4 h-4"></i>
+            <span data-i18n="tab_dashboard">داشبۆرد و عەمبار</span>
+          </button>
+          <button onclick="switchTab('transactions')" id="tab-btn-transactions"
+            class="tab-btn inline-flex items-center gap-2 px-4 py-2.5 border-b-2 border-transparent text-slate-600 hover:text-slate-900 text-sm font-medium">
+            <i data-lucide="history" class="w-4 h-4"></i>
+            <span data-i18n="tab_transactions">مێژوویا لڤینان</span>
+          </button>
+          <button onclick="switchTab('reports')" id="tab-btn-reports"
+            class="tab-btn inline-flex items-center gap-2 px-4 py-2.5 border-b-2 border-transparent text-slate-600 hover:text-slate-900 text-sm font-medium">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+            <span data-i18n="tab_reports">جەرد و راپۆرت</span>
+          </button>
+          <button onclick="switchTab('audit')" id="tab-btn-audit"
+            class="tab-btn inline-flex items-center gap-2 px-4 py-2.5 border-b-2 border-transparent text-slate-600 hover:text-slate-900 text-sm font-medium">
+            <i data-lucide="shield-alert" class="w-4 h-4"></i>
+            <span data-i18n="tab_audit">سەرپەرشتی و وردبینی</span>
+          </button>
+          
+        </nav>
+      </div>
+    </header>
+
+    <!-- MAIN BODY CONTENT -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+      <!-- ================= TAB 1: DASHBOARD & INVENTORY ================= -->
+      <section id="tab-content-dashboard" class="space-y-6">
+        <!-- Low Stock Alert Banner -->
+        <div id="low-stock-banner" class="hidden p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-3 shadow-sm animate-pulse">
+          <div class="p-2 rounded-lg bg-amber-100 text-amber-700">
+            <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+          </div>
+          <div class="flex-1">
+            <h4 class="font-bold text-sm" data-i18n="alert_banner_title">ئاگادارییا کێمبوونا کارتان د خەزینەیێ دا!</h4>
+            <p class="text-xs text-amber-800 mt-0.5" id="low-stock-banner-text">هندەک کارت گەهشتینە بن راددێ کێمترین رێژەیێ.</p>
+          </div>
+          <button onclick="openModal('receipt-modal')" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold transition" data-i18n="btn_stock_in">
+            + وەرگرتنا کارتان
+          </button>
+        </div>
+
+        <!-- Expiry Alert Banner -->
+        <div id="expiry-alert-banner" class="hidden p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 flex items-start gap-3 shadow-sm animate-pulse">
+          <div class="p-2 rounded-lg bg-rose-100 text-rose-700">
+            <i data-lucide="clock" class="w-5 h-5"></i>
+          </div>
+          <div class="flex-1">
+            <h4 class="font-bold text-sm" data-i18n="expiry_banner_title">ئاگادارییا ب سەرڤەچوونا کارتان د خەزینەیێ دا (Expiry Alert)!</h4>
+            <p class="text-xs text-rose-800 mt-0.5" id="expiry-banner-text">هندەک کارت نێزیکی ماوێ ب سەرڤەچوونێ نە یان ب سەرڤەچووینە.</p>
+          </div>
+          <button onclick="filterByExpiry()" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold transition" data-i18n="btn_view_expiring">
+            پیشاندانا کارتان
+          </button>
+        </div>
+
+        <!-- KPI SUMMARY CARDS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Total Cards in Safe -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-medium text-slate-500" data-i18n="kpi_total_cards">کۆیێ گشتیێ کارتێن خەزینەیێ</p>
+              <h3 class="text-2xl font-bold text-slate-900 mt-1" id="stat-total-cards">0</h3>
+              <p class="text-[11px] text-emerald-600 font-medium mt-1 flex items-center gap-1">
+                <i data-lucide="check-circle" class="w-3 h-3"></i>
+                <span id="stat-active-types">0</span> <span data-i18n="kpi_card_types">جۆرێن بەردەست</span>
+              </p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <i data-lucide="credit-card" class="w-6 h-6"></i>
+            </div>
+          </div>
+
+          <!-- Total Face Value -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-medium text-slate-500" data-i18n="kpi_face_value">بهایێ کارتان (Face Value)</p>
+              <h3 class="text-2xl font-bold text-slate-900 mt-1" id="stat-face-value">0 IQD</h3>
+              <p class="text-[11px] text-slate-400 font-medium mt-1" data-i18n="kpi_face_sub">بهایێ فەرمی یێ فرۆتنێ</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <i data-lucide="banknote" class="w-6 h-6"></i>
+            </div>
+          </div>
+
+          <!-- Today's Flow -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-medium text-slate-500" data-i18n="kpi_today_flow">لڤینێن ئەڤرۆ (Today's Flow)</p>
+              <div class="flex items-center gap-3 mt-1">
+                <span class="text-sm font-bold text-emerald-600">+<span id="stat-today-in">0</span> <span data-i18n="in_label">هاتن</span></span>
+                <span class="text-slate-300">|</span>
+                <span class="text-sm font-bold text-rose-600">-<span id="stat-today-out">0</span> <span data-i18n="out_label">دەرچوون</span></span>
+              </div>
+              <p class="text-[11px] text-slate-400 font-medium mt-1" data-i18n="kpi_today_sub">هاتن و دەرچوونا فەرمی</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <i data-lucide="arrow-left-right" class="w-6 h-6"></i>
+            </div>
+          </div>
+
+          <!-- Low Stock Alert Count -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-medium text-slate-500" data-i18n="kpi_low_stock">کارتێن گەهشتینە کێمیێ</p>
+              <h3 class="text-2xl font-bold text-slate-900 mt-1" id="stat-low-stock">0</h3>
+              <p class="text-[11px] text-amber-600 font-medium mt-1" data-i18n="kpi_low_sub">پێدڤی ب زێدەکرنێ نە</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <i data-lucide="alert-octagon" class="w-6 h-6"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIONS & INVENTORY TABLE -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <!-- Toolbar Header -->
+          <div class="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-slate-50/50">
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-bold text-slate-900" data-i18n="inventory_table_title">لیستا کارتێن خەزینەیێ (Safe Inventory)</h3>
+              <span class="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-semibold" id="table-total-count">0</span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="exportDashboardToExcel()"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 shadow-sm transition">
+                <i data-lucide="download" class="w-4 h-4 text-emerald-600"></i>
+                <span data-i18n="btn_dashboard_excel">تصدير المخزون (Excel / CSV)</span>
+              </button>
+              <button onclick="openModal('receipt-modal')"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm transition">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span data-i18n="btn_stock_in">وەرگرتنا کارتان (Stock In)</span>
+              </button>
+              <button onclick="openModal('issuance-modal')"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition">
+                <i data-lucide="send" class="w-4 h-4"></i>
+                <span data-i18n="btn_issue_card">دەرخستنا کارتان (Issue Card)</span>
+              </button>
+              <button onclick="openModal('new-card-modal')" id="btn-add-card-type"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 shadow-sm transition">
+                <i data-lucide="folder-plus" class="w-4 h-4"></i>
+                <span data-i18n="btn_new_card">جۆرێ نوێ</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Filter & Search Controls -->
+          <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-white">
+            <div class="relative w-full sm:w-80">
+              <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                <i data-lucide="search" class="w-4 h-4"></i>
+              </span>
+              <input type="text" id="inventory-search" oninput="renderInventoryTable()"
+                data-i18n-placeholder="search_inventory_ph"
+                placeholder="لێگەڕیان ل جۆرێ کارتی..."
+                class="w-full pr-9 pl-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+              <select id="filter-provider" onchange="renderInventoryTable()"
+                class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="all" data-i18n="filter_all_providers">هەمی کۆمپانیا (All)</option>
+                <option value="Asiacell">Asiacell</option>
+                <option value="Korek Telecom">Korek Telecom</option>
+                <option value="Zain Iraq">Zain Iraq</option>
+                <option value="Fastlink">Fastlink</option>
+                <option value="Newroz 4G">Newroz 4G</option>
+              </select>
+
+              <select id="filter-stock-status" onchange="renderInventoryTable()"
+                class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="all" data-i18n="filter_all_status">هەمی رەوش (All Status)</option>
+                <option value="low" data-i18n="filter_low_stock">کارتێن کێم (Low Stock)</option>
+                <option value="available" data-i18n="filter_in_stock">بەردەست (In Stock)</option>
+                <option value="expiring" data-i18n="filter_expiring_soon">نێزیکی ب سەرڤەچوونێ (Expiring Soon)</option>
+                <option value="expired" data-i18n="filter_expired">ب سەرڤەچوویە (Expired)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Inventory Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs text-slate-600">
+              <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4" data-i18n="th_provider">کۆمپانیا و جۆر</th>
+                  <th class="py-3 px-4" data-i18n="th_denomination">بهایێ کارتی</th>
+                  <th class="py-3 px-4" data-i18n="th_category">پۆلێن</th>
+                  <th class="py-3 px-4 text-center" data-i18n="th_available_stock">ژمارا بەردەست</th>
+                  <th class="py-3 px-4 text-center" data-i18n="th_min_alert">راددێ ئاگاداریێ</th>
+                  <th class="py-3 px-4 text-center" data-i18n="th_expiry_date">مێژوویا ب سەرڤەچوونێ (Expiry)</th>
+                  <th class="py-3 px-4" data-i18n="th_total_value">کۆیێ بها</th>
+                  <th class="py-3 px-4 text-center" data-i18n="th_actions">کردارێن بلەز</th>
+                </tr>
+              </thead>
+              <tbody id="inventory-tbody" class="divide-y divide-slate-100">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: TRANSACTIONS HISTORY ================= -->
+      <section id="tab-content-transactions" class="hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-slate-50/50">
+            <div>
+              <h3 class="text-base font-bold text-slate-900" data-i18n="trans_title">مێژوویا تەمام یا لڤینێن خەزینەیێ</h3>
+              <p class="text-xs text-slate-500 mt-0.5" data-i18n="trans_subtitle">تۆمارا هەمی وەرگرتن و دەرخستنان دگەل ناڤێ کەسێ بەرپرس و بەرواری</p>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <button onclick="loadTransactions()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition" title="نوێکرن">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row items-center gap-3 bg-white">
+            <div class="relative w-full sm:w-80">
+              <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                <i data-lucide="search" class="w-4 h-4"></i>
+              </span>
+              <input type="text" id="trans-search" oninput="loadTransactions()"
+                data-i18n-placeholder="search_trans_ph"
+                placeholder="لێگەڕیان ب ناڤێ داواکەر، کارت، هوکار..."
+                class="w-full pr-9 pl-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+              <select id="trans-filter-type" onchange="loadTransactions()"
+                class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="all" data-i18n="filter_all_trans">هەمی لڤین (All)</option>
+                <option value="receipt" data-i18n="filter_receipts_only">تنێ وەرگرتن (Receipts / In)</option>
+                <option value="issuance" data-i18n="filter_issuances_only">تنێ دەرخستن (Issuances / Out)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Transactions Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs text-slate-600">
+              <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4" data-i18n="th_trans_type">جۆرێ لڤینێ</th>
+                  <th class="py-3 px-4" data-i18n="th_card">کارت و بها</th>
+                  <th class="py-3 px-4 text-center" data-i18n="th_qty">ژمارە</th>
+                  <th class="py-3 px-4" data-i18n="th_requester">لایەنێ داواکەر / دابینکەر</th>
+                  <th class="py-3 px-4" data-i18n="th_reason">هوکار / تێبینی</th>
+                  <th class="py-3 px-4" data-i18n="th_handler">بەرپرسێ جێبەجێکار</th>
+                  <th class="py-3 px-4" data-i18n="th_date">بەروار و دەمژمێر</th>
+                  <th class="py-3 px-4 text-center" data-i18n="th_actions">کردارێن ژێبرنێ</th>
+                </tr>
+              </thead>
+              <tbody id="transactions-tbody" class="divide-y divide-slate-100">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: PERIODIC AUDIT & REPORTS ================= -->
+      <section id="tab-content-reports" class="hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+          <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900" data-i18n="audit_title">جەردا خەزینەیێ و راپۆرتێن دەوری (Inventory Audit & Reports)</h3>
+              <p class="text-xs text-slate-500 mt-1" data-i18n="audit_subtitle">پشکنینا دەستپێکێ (Opening)، هاتین (Received)، دەرچووین (Issued) و ماین (Closing) بۆ جەردا سالانە، هەیڤانە یان هەفتیانە</p>
+            </div>
+
+            <!-- Export & Print Actions -->
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="switchTab('audit')" class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-semibold border border-indigo-200 transition flex items-center gap-1.5">
+                <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+                <span data-i18n="btn_reconcile_nav">راستڤەکرن / جەردا دەستی</span>
+              </button>
+              <button onclick="window.print()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition flex items-center gap-1.5">
+                <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                <span data-i18n="btn_print">چاپکرن (Print)</span>
+              </button>
+              <button onclick="exportReportToCSV()" class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-200 transition flex items-center gap-1.5">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span data-i18n="btn_excel">داگرتن (Excel / CSV)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Audit Presets (Weekly, Monthly, Annual, Today) -->
+          <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs font-bold text-slate-700 ml-2" data-i18n="quick_audit_label">جەردا بلەز:</span>
+              <button onclick="setAuditPreset('today')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-300 hover:border-blue-500 hover:text-blue-600 transition shadow-sm" data-i18n="audit_today">
+                📅 جەردا ئەڤرۆ (Daily)
+              </button>
+              <button onclick="setAuditPreset('week')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-300 hover:border-blue-500 hover:text-blue-600 transition shadow-sm" data-i18n="audit_week">
+                📆 جەردا ڤێ هەفتیێ (Weekly)
+              </button>
+              <button onclick="setAuditPreset('month')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-300 hover:border-blue-500 hover:text-blue-600 transition shadow-sm" data-i18n="audit_month">
+                📊 جەردا ڤێ هەیڤێ (Monthly)
+              </button>
+              <button onclick="setAuditPreset('year')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-300 hover:border-blue-500 hover:text-blue-600 transition shadow-sm" data-i18n="audit_year">
+                🏛️ جەردا ئەڤ ساڵە (Annual)
+              </button>
+            </div>
+
+            <!-- Custom Date Selector -->
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs text-slate-500 font-medium" data-i18n="from_date">ژ:</span>
+              <input type="date" id="report-start-date" class="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700">
+              <span class="text-xs text-slate-500 font-medium" data-i18n="to_date">تا:</span>
+              <input type="date" id="report-end-date" class="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700">
+              <button onclick="generateReport(true)" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition active:scale-95" data-i18n="btn_show_audit">
+                پیشاندان
+              </button>
+            </div>
+          </div>
+
+          <!-- Audit Calculation Progress & Status Indicator -->
+          <div id="report-loading-container" class="hidden bg-blue-50/70 border border-blue-200/80 rounded-xl p-4 transition-all duration-300 space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold text-blue-800">
+              <div class="flex items-center gap-2">
+                <i data-lucide="calculator" class="w-4 h-4 animate-spin text-blue-600"></i>
+                <span id="report-loading-text" data-i18n="report_calculating_hint">جارێ یا حساباتا جەردا خەزینەیێ دکەت (دەستپێک، هاتین، دەرچووین، ماین)...</span>
+              </div>
+              <span id="report-loading-percent" class="font-mono text-blue-700 bg-white px-2 py-0.5 rounded-md border border-blue-200 text-[11px]">0%</span>
+            </div>
+            <div class="w-full bg-blue-100/60 rounded-full h-2 overflow-hidden">
+              <div id="report-progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-200 ease-out" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Report Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs text-slate-700" id="report-table">
+              <thead class="bg-slate-100 text-slate-600 uppercase font-semibold border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4" data-i18n="th_card">جۆرێ کارتی</th>
+                  <th class="py-3 px-4" data-i18n="th_denomination">بهایێ فەرمی</th>
+                  <th class="py-3 px-4 text-center" data-i18n="th_opening">هەژمارا دەستپێکێ (Opening)</th>
+                  <th class="py-3 px-4 text-center text-emerald-600" data-i18n="th_received">هاتین (Received +)</th>
+                  <th class="py-3 px-4 text-center text-rose-600" data-i18n="th_issued">دەرچووین (Issued -)</th>
+                  <th class="py-3 px-4 text-center font-bold" data-i18n="th_closing">جەردا دووماهیێ (Closing)</th>
+                  <th class="py-3 px-4 text-left" data-i18n="th_total_val">کۆیێ بهایێ ماین (IQD)</th>
+                </tr>
+              </thead>
+              <tbody id="report-tbody" class="divide-y divide-slate-100">
+                <!-- Dynamically populated -->
+              </tbody>
+              <tfoot id="report-tfoot" class="bg-slate-50 font-bold border-t-2 border-slate-200">
+                <!-- Totals -->
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: SUPERVISOR & AUDIT TRAIL ================= -->
+      <section id="tab-content-audit" class="hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Safe Reconciliation Panel (Stock Adjustment) -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+            <div class="flex items-center gap-2 text-slate-900 font-bold text-base">
+              <i data-lucide="sliders" class="w-5 h-5 text-indigo-600"></i>
+              <h4 data-i18n="reconcile_title">راستڤەکرنا خەزینەیێ (Reconciliation)</h4>
+            </div>
+            <p class="text-xs text-slate-500" data-i18n="reconcile_sub">ل دەمێ جەردا دەستی، ئەگەر جیاوازی هەبیت، دشێی ب شێوەیەکێ فەرمی ژمارەیان راستڤە بکەی.</p>
+
+            <form id="reconcile-form" onsubmit="handleReconciliation(event)" class="space-y-3.5">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="select_card">هەڵبژاردنا کارتی</label>
+                <select id="reconcile-card-id" onchange="updateReconcileCurrentStock()" required
+                  class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                  <!-- Populated -->
+                </select>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-slate-500 mb-1" data-i18n="current_system_count">هەژمارا سیستەمی</label>
+                  <input type="number" id="reconcile-current" disabled
+                    class="w-full text-xs bg-slate-100 border border-slate-200 rounded-xl p-2.5 font-bold text-slate-700">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="actual_safe_count">هەژمارا راستی د خەزینەیێ دا</label>
+                  <input type="number" id="reconcile-actual" min="0" required
+                    class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold text-blue-600">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="reconcile_reason">ئەگەرێ فەرمی یێ راستڤەکرنێ</label>
+                <textarea id="reconcile-reason" rows="2" required placeholder="بۆ نموونە: ئەنجامدانا جەردا هەیڤانە..."
+                  class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"></textarea>
+              </div>
+
+              <button type="submit"
+                class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm" data-i18n="btn_save_reconcile">
+                تۆمارکرنا راستڤەکرنێ
+              </button>
+            </form>
+          </div>
+
+          <!-- Audit Trail Log Viewer -->
+          <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 text-slate-900 font-bold text-base">
+                <i data-lucide="shield" class="w-5 h-5 text-blue-600"></i>
+                <h4 data-i18n="audit_log_title">تۆمارا پشکنین و وردبینیێ (Audit Trail)</h4>
+              </div>
+              <button onclick="loadAuditLogs()" class="text-xs text-blue-600 hover:underline" data-i18n="btn_refresh">نوێکرنەوە</button>
+            </div>
+            <p class="text-xs text-slate-500" data-i18n="audit_log_sub">هەمی چوونەژووربوون، زێدەکرن، دەرخستن و گوهۆڕین دگەل ناسنامەیێ ل ڤێرە د پاراستینە.</p>
+
+            <div class="overflow-y-auto max-h-96 border border-slate-100 rounded-xl divide-y divide-slate-100" id="audit-logs-container">
+              <!-- Logs populated -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      
+
+    </main>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- MODAL: USER PROFILE & PASSWORD SETTINGS -->
+  <div id="profile-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+            <i data-lucide="user-cog" class="w-4 h-4"></i>
+          </div>
+          <h3 class="text-base font-bold text-slate-900" data-i18n="profile_modal_title">گۆهۆڕینا پێزانینێن ئەکاونتێ تە</h3>
+        </div>
+        <button onclick="closeModal('profile-modal')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="profile-form" onsubmit="handleUpdateProfile(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="full_name">ناڤێ تە یێ دیار (Display Name)</label>
+          <input type="text" id="profile-full-name" required
+            class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="profile_username">ناڤێ بکارئینەری یێ نوێ (Username)</label>
+          <input type="text" id="profile-username" required dir="ltr"
+            class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono">
+        </div>
+
+        <div class="pt-2 border-t border-slate-100">
+          <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="current_password">تێپەڕەوشا کەڤن (Current Password)</label>
+          <input type="password" id="profile-old-pass" required dir="ltr" placeholder="تێپەڕەوشا نوکە"
+            class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="new_password">تێپەڕەوشا نوێ (New Password - ئەگەر دڤێت بگۆڕی)</label>
+          <input type="password" id="profile-new-pass" dir="ltr" placeholder="بەتاڵ بهێلە ئەگەر ناگۆڕی"
+            class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeModal('profile-modal')"
+            class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition" data-i18n="btn_cancel">
+            پاشگەزبوون
+          </button>
+          <button type="submit"
+            class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition" data-i18n="btn_save_changes">
+            پاراستنا گۆهۆڕینان
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 1. STOCK IN (RECEIPT) MODAL -->
+  <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+          </div>
+          <h3 class="text-base font-bold text-slate-900" data-i18n="modal_stock_in_title">وەرگرتنا کارتێن نوێ بۆ خەزینەیێ (Stock In)</h3>
+        </div>
+        <button onclick="closeModal('receipt-modal')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="receipt-form" onsubmit="handleStockReceipt(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="select_card">جۆرێ کارتی و کۆمپانیا</label>
+          <select id="receipt-card-id" required class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+            <!-- Populated -->
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="form_qty">ژمارا کارتان (Quantity)</label>
+            <input type="number" id="receipt-quantity" min="1" required placeholder="50"
+              class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="form_cost">بهایێ کڕینێ (IQD)</label>
+            <input type="number" id="receipt-unit-cost" min="0" step="50" required placeholder="4900"
+              class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1" data-i18n="form_supplier">دابینکەر (Supplier)</label>
+            <input type="text" id="receipt-supplier" placeholder="کۆمپانیا یان نوێنەر"
+              class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1" data-i18n="form_date">بەروارێ وەرگرتنێ</label>
+            <input type="date" id="receipt-date" required onchange="autoCalculateReceiptExpiry()"
+              class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="form_expiry_date">مێژوویا ب سەرڤەچوونێ (Expiry Date)</label>
+            <input type="date" id="receipt-expiry-date"
+              class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1" data-i18n="form_notes">تێبینی</label>
+            <input type="text" id="receipt-notes" placeholder="..."
+              class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          </div>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeModal('receipt-modal')"
+            class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition" data-i18n="btn_cancel">
+            پاشگەزبوون
+          </button>
+          <button type="submit"
+            class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm transition" data-i18n="btn_record_in">
+            تۆمارکرنا وەرگرتنێ
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. STOCK OUT (ISSUANCE) MODAL -->
+  <div id="issuance-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </div>
+          <h3 class="text-base font-bold text-slate-900" data-i18n="modal_issue_title">دەرخستنا کارتان ژ خەزینەیێ (Issue Scratch Card)</h3>
+        </div>
+        <button onclick="closeModal('issuance-modal')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="issuance-form" onsubmit="handleStockIssuance(event)" class="space-y-4">
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-semibold text-slate-700" data-i18n="select_card">جۆرێ کارتی</label>
+            <span id="issuance-available-stock" class="text-xs font-bold text-blue-600">بەردەست: 0</span>
+          </div>
+          <select id="issuance-card-id" onchange="updateIssuanceAvailableStock()" required class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+            <!-- Populated -->
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="form_issue_qty">ژمارا دەرخستنێ (Quantity)</label>
+            <input type="number" id="issuance-quantity" min="1" required placeholder="5"
+              class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="form_issue_date">بەروارێ دەرخستنێ</label>
+            <input type="date" id="issuance-date" required
+              class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="form_requester">ناڤێ داواکەری (Requester Name)</label>
+            <input type="text" id="issuance-requester" required placeholder="ناڤێ کەسێ وەرگر"
+              class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1" data-i18n="form_dept">بەش / پشک (Department)</label>
+            <input type="text" id="issuance-dept" placeholder="کارگێڕی، IT، هتد"
+              class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="form_reason">ئەگەرێ داخوازیێ (Reason)</label>
+          <input type="text" id="issuance-reason" required placeholder="هوکارێ وەرگرتنێ..."
+            class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1" data-i18n="form_notes">تێبینی</label>
+          <input type="text" id="issuance-notes" placeholder="..."
+            class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeModal('issuance-modal')"
+            class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition" data-i18n="btn_cancel">
+            پاشگەزبوون
+          </button>
+          <button type="submit"
+            class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition" data-i18n="btn_record_out">
+            تۆمار و کێمکرنا کارتان
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. ADD NEW CARD TYPE MODAL -->
+  <div id="new-card-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-base font-bold text-slate-900" data-i18n="modal_new_card_title">زێدەکرنا جۆرەکێ نوێ یێ کارتی</h3>
+        <button onclick="closeModal('new-card-modal')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="new-card-form" onsubmit="handleAddNewCardType(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="th_provider">کۆمپانیا (Provider)</label>
+          <input type="text" id="new-card-provider" required placeholder="Asiacell, Korek, Zain, Fastlink..."
+            class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="th_denomination">بهایێ کارتی (Denomination)</label>
+            <input type="number" id="new-card-denom" required placeholder="5000, 10000, 25000"
+              class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="th_category">پۆلێن (Category)</label>
+            <select id="new-card-category" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+              <option value="Mobile">مۆبایل (Mobile)</option>
+              <option value="Internet">ئینتەرنێت (Internet)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="th_min_alert">راددێ ئاگاداریێ (Min Alert)</label>
+            <input type="number" id="new-card-alert" value="10" min="1" required
+              class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="form_cost">بهایێ کڕینێ (IQD)</label>
+            <input type="number" id="new-card-cost" value="0" min="0"
+              class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="form_expiry_date">مێژوویا ب سەرڤەچوونێ (Expiry Date)</label>
+          <input type="date" id="new-card-expiry-date"
+            class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeModal('new-card-modal')"
+            class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition" data-i18n="btn_cancel">
+            پاشگەزبوون
+          </button>
+          <button type="submit"
+            class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition" data-i18n="btn_add">
+            زێدەکرن
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. EDIT EXPIRY DATE MODAL -->
+  <div id="edit-expiry-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+            <i data-lucide="calendar" class="w-4 h-4"></i>
+          </div>
+          <h3 class="text-base font-bold text-slate-900" data-i18n="modal_edit_expiry_title">گۆهۆڕینا مێژوویا ب سەرڤەچوونێ</h3>
+        </div>
+        <button onclick="closeModal('edit-expiry-modal')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="edit-expiry-form" onsubmit="handleSaveCardExpiry(event)" class="space-y-4">
+        <input type="hidden" id="edit-expiry-card-id">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1" id="edit-expiry-card-name">کارت</label>
+          <input type="date" id="edit-expiry-input" required class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          <p class="text-[11px] text-slate-500 mt-1" data-i18n="edit_expiry_hint">دشێی بەروارێ ب سەرڤەچوونا کارتێ راستڤە بکەی.</p>
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('edit-expiry-modal')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition" data-i18n="btn_cancel">پاشگەزبوون</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition" data-i18n="btn_save_changes">پاراستن</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATIONS CONTAINER -->
+  <div id="toast-container" class="fixed bottom-5 left-5 z-50 space-y-2 max-w-sm pointer-events-none"></div>
+
+  <!-- Application Logic -->
+  <script src="app-supabase.js"></script>
+</body>
+</html>
