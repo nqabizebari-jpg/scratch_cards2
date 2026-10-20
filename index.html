@@ -102,15 +102,15 @@
     <!-- TOP NAVIGATION HEADER -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
+        <div class="flex items-center justify-between h-14 sm:h-16 gap-1 sm:gap-2">
           <!-- Logo & Title -->
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 shrink-0">
               <i data-lucide="vault" class="w-5 h-5"></i>
             </div>
             <div>
               <div class="flex items-center gap-2">
-                <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight" data-i18n="app_title">عەمبارا کارتێن خەزینەیێ</h1>
+                <h1 class="text-sm sm:text-lg font-bold text-slate-900 leading-tight truncate max-w-[125px] sm:max-w-none" data-i18n="app_title">عەمبارا کارتێن خەزینەیێ</h1>
                 <!-- Live Connection Badge -->
                 <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm">
                   <span class="live-pulse"></span>
@@ -184,7 +184,7 @@
     </header>
 
     <!-- MAIN BODY CONTENT -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-2 sm:px-6 lg:px-8 py-3 sm:py-6 space-y-3 sm:space-y-6 overflow-hidden">
 
       <!-- ================= TAB 1: DASHBOARD & INVENTORY ================= -->
       <section id="tab-content-dashboard" class="space-y-6">
@@ -284,24 +284,24 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
               <button onclick="exportDashboardToExcel()"
-                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 shadow-sm transition">
+                class="flex-1 sm:flex-initial justify-center inline-flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 shadow-sm transition">
                 <i data-lucide="download" class="w-4 h-4 text-emerald-600"></i>
                 <span data-i18n="btn_dashboard_excel">تصدير المخزون (Excel / CSV)</span>
               </button>
               <button onclick="openModal('receipt-modal')"
-                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm transition">
+                class="flex-1 sm:flex-initial justify-center inline-flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm transition">
                 <i data-lucide="plus" class="w-4 h-4"></i>
                 <span data-i18n="btn_stock_in">وەرگرتنا کارتان (Stock In)</span>
               </button>
               <button onclick="openModal('issuance-modal')"
-                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition">
+                class="flex-1 sm:flex-initial justify-center inline-flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition">
                 <i data-lucide="send" class="w-4 h-4"></i>
                 <span data-i18n="btn_issue_card">دەرخستنا کارتان (Issue Card)</span>
               </button>
               <button onclick="openModal('new-card-modal')" id="btn-add-card-type"
-                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 shadow-sm transition">
+                class="flex-1 sm:flex-initial justify-center inline-flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 shadow-sm transition">
                 <i data-lucide="folder-plus" class="w-4 h-4"></i>
                 <span data-i18n="btn_new_card">جۆرێ نوێ</span>
               </button>
@@ -471,12 +471,12 @@
             </div>
 
             <!-- Custom Date Selector -->
-            <div class="flex items-center gap-1.5">
+            <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
               <span class="text-xs text-slate-500 font-medium" data-i18n="from_date">ژ:</span>
-              <input type="date" id="report-start-date" class="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700">
+              <input type="date" id="report-start-date" class="flex-1 sm:flex-initial text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 min-w-[110px]">
               <span class="text-xs text-slate-500 font-medium" data-i18n="to_date">تا:</span>
-              <input type="date" id="report-end-date" class="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700">
-              <button onclick="generateReport(true)" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition active:scale-95" data-i18n="btn_show_audit">
+              <input type="date" id="report-end-date" class="flex-1 sm:flex-initial text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 min-w-[110px]">
+              <button onclick="generateReport(true)" class="w-full sm:w-auto px-4 py-2 sm:py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-sm transition active:scale-95 text-center" data-i18n="btn_show_audit">
                 پیشاندان
               </button>
             </div>

@@ -1,4 +1,4 @@
-/* styles.css - Custom styling, glassmorphism, animations and print formatting */
+/* styles.css - Custom styling, mobile-first responsiveness, and optimizations */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap');
 
 :root {
@@ -7,29 +7,31 @@
   --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
 }
 
+/* Prevent unwanted horizontal overflow everywhere */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   font-family: 'Plus Jakarta Sans', 'Noto Naskh Arabic', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Glassmorphism subtle card styling */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-}
-
-.dark-glass {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+/* Fix scrolling on mobile tables */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
 }
 
 /* Real-time live pulse indicator */
 .live-pulse {
   display: inline-block;
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #10b981;
   box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
@@ -43,7 +45,7 @@ body {
   }
   70% {
     transform: scale(1);
-    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
   }
   100% {
     transform: scale(0.95);
@@ -51,35 +53,62 @@ body {
   }
 }
 
-/* Card Provider Badges */
-.badge-asiacell {
-  background-color: #fee2e2;
-  color: #b91c1c;
-  border: 1px solid #fca5a5;
+/* Custom Scrollbar for sleek mobile look */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
 }
 
-.badge-korek {
-  background-color: #e0f2fe;
-  color: #0369a1;
-  border: 1px solid #7dd3fc;
-}
+/* Mobile-First Tweaks for small screens (< 640px) */
+@media (max-width: 639px) {
+  /* Prevent header items from expanding out of screen */
+  header .max-w-7xl {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
 
-.badge-zain {
-  background-color: #f3e8ff;
-  color: #7e22ce;
-  border: 1px solid #d8b4fe;
-}
+  /* Make tab titles crisp and easily scrollable */
+  nav.overflow-x-auto {
+    scrollbar-width: none; /* Firefox */
+  }
+  nav.overflow-x-auto::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+  
+  .tab-btn {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap !important;
+  }
 
-.badge-fastlink {
-  background-color: #ecfdf5;
-  color: #047857;
-  border: 1px solid #6ee7b7;
-}
+  /* Card padding on mobile */
+  .bg-white.rounded-2xl {
+    border-radius: 1rem !important;
+  }
 
-.badge-newroz {
-  background-color: #fef3c7;
-  color: #b45309;
-  border: 1px solid #fcd34d;
+  /* Compact Table typography */
+  table th, table td {
+    padding: 0.6rem 0.5rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Modals on mobile: full width with comfortable margin */
+  .fixed.inset-0 > div {
+    margin: 0.75rem !important;
+    max-height: 92vh !important;
+    overflow-y: auto !important;
+  }
 }
 
 /* Print styling for official inventory audit reports */
@@ -98,14 +127,5 @@ body {
     border: 1px solid #ccc !important;
     box-shadow: none !important;
     background: transparent !important;
-  }
-  table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-  }
-  th, td {
-    border: 1px solid #444 !important;
-    padding: 8px !important;
-    color: black !important;
   }
 }
