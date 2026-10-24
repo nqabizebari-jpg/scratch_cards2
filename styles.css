@@ -1,13 +1,14 @@
-/* styles.css - Custom styling, mobile-first responsiveness, and optimizations */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap');
+/* styles.css - AVSI Scratch Card Inventory System (Enhanced UI & Mobile-First) */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  --primary: #0284c7;
+  --primary-hover: #0369a1;
+  --avsi-green: #00965e;
+  --avsi-blue: #0077b6;
 }
 
-/* Prevent unwanted horizontal overflow everywhere */
+/* Prevent unwanted horizontal overflow */
 html, body {
   overflow-x: hidden;
   width: 100%;
@@ -17,17 +18,38 @@ html, body {
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', 'Noto Naskh Arabic', sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Noto Sans Arabic', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Fix scrolling on mobile tables */
-.overflow-x-auto {
-  -webkit-overflow-scrolling: touch;
-  max-width: 100%;
+/* Card Provider Badges */
+.badge-asiacell {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+.badge-korek {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #7dd3fc;
+}
+.badge-zain {
+  background-color: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid #d8b4fe;
+}
+.badge-fastlink {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #6ee7b7;
+}
+.badge-newroz {
+  background-color: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fcd34d;
 }
 
-/* Real-time live pulse indicator */
+/* Pulse animation for real-time live indicator */
 .live-pulse {
   display: inline-block;
   width: 8px;
@@ -53,10 +75,10 @@ body {
   }
 }
 
-/* Custom Scrollbar for sleek mobile look */
+/* Custom Sleek Scrollbars */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -69,22 +91,42 @@ body {
   background: rgba(100, 116, 139, 0.7);
 }
 
-/* Mobile-First Tweaks for small screens (< 640px) */
+/* Status Badges */
+.status-badge-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+.status-badge-approved {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+.status-badge-rejected {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+.status-badge-executed {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+/* Mobile-First Customizations (< 640px) */
 @media (max-width: 639px) {
-  /* Prevent header items from expanding out of screen */
   header .max-w-7xl {
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
   }
 
-  /* Make tab titles crisp and easily scrollable */
   nav.overflow-x-auto {
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none;
   }
   nav.overflow-x-auto::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    display: none;
   }
-  
+
   .tab-btn {
     padding-left: 0.75rem !important;
     padding-right: 0.75rem !important;
@@ -92,18 +134,11 @@ body {
     white-space: nowrap !important;
   }
 
-  /* Card padding on mobile */
-  .bg-white.rounded-2xl {
-    border-radius: 1rem !important;
-  }
-
-  /* Compact Table typography */
   table th, table td {
-    padding: 0.6rem 0.5rem !important;
+    padding: 0.55rem 0.5rem !important;
     font-size: 0.75rem !important;
   }
 
-  /* Modals on mobile: full width with comfortable margin */
   .fixed.inset-0 > div {
     margin: 0.75rem !important;
     max-height: 92vh !important;
@@ -111,7 +146,7 @@ body {
   }
 }
 
-/* Print styling for official inventory audit reports */
+/* Printable Official Reports */
 @media print {
   body {
     background: white !important;
@@ -122,10 +157,5 @@ body {
   }
   .print-only {
     display: block !important;
-  }
-  .glass-panel {
-    border: 1px solid #ccc !important;
-    box-shadow: none !important;
-    background: transparent !important;
   }
 }

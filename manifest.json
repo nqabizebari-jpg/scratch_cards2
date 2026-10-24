@@ -1,17 +1,17 @@
 {
-  "name": "سیستەمێ عەمبارا کارتێن خەزینەیێ",
-  "short_name": "SafeCards",
-  "description": "Safe Scratch Card Inventory Management System",
+  "name": "Scratch Card Inventory - AVSI",
+  "short_name": "AVSI Cards",
+  "description": "AVSI Scratch Card Safe Inventory & Staff Request Portal",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f172a",
-  "theme_color": "#2563eb",
+  "theme_color": "#0284c7",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232563eb'/><text y='.9em' font-size='80' x='10'>🔐</text></svg>",
+      "src": "avsi_logo.png",
       "sizes": "192x192 512x512",
-      "type": "image/svg+xml"
+      "type": "image/png"
     }
   ]
 }
