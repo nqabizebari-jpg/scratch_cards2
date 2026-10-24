@@ -9,7 +9,7 @@
   "theme_color": "#0284c7",
   "icons": [
     {
-      "src": "avsi_logo.png",
+      "src": "AVSI.png",
       "sizes": "192x192 512x512",
       "type": "image/png"
     }
