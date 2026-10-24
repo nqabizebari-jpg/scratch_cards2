@@ -395,59 +395,53 @@ function showAppView() {
 function applyRolePermissions() {
   const role = currentUser.role;
   const isRequester = role === 'requester';
-  const isAdmin = role === 'admin';
-  const isApprover = role === 'approver';
-  const isManager = role === 'manager';
+  const isAdmin = role === 'admin';     // Alind: execute/dispense + full management
+  const isApprover = role === 'approver'; // Yahia: approve/reject + same inventory access as Alind
+  const isManager = role === 'manager';   // Read-only overview
 
-  // Requester sees ONLY staff portal
+  // ── Requester: sees ONLY their own portal ──────────────────────────────────
   const requesterPortal = document.getElementById('requester-portal-view');
   const managerNav = document.getElementById('manager-nav');
-  const dashboardSec = document.getElementById('tab-content-dashboard');
 
   if (isRequester) {
     requesterPortal.classList.remove('hidden');
     managerNav.classList.add('hidden');
-    // Hide all manager tab contents
     document.querySelectorAll('section[id^="tab-content-"]').forEach(s => s.classList.add('hidden'));
     loadRequesterHistory();
     return;
-  } else {
-    requesterPortal.classList.add('hidden');
-    managerNav.classList.remove('hidden');
-    // Default show dashboard
-    switchTab('dashboard');
   }
 
-  // Admin Alind only permissions
+  // ── All other roles: show full nav, hide requester portal ─────────────────
+  requesterPortal.classList.add('hidden');
+  managerNav.classList.remove('hidden');
+  switchTab('dashboard');
+
+  // ── User Management tab: Alind ONLY ───────────────────────────────────────
   const usersTabBtn = document.getElementById('tab-btn-users');
   if (usersTabBtn) {
     if (isAdmin) usersTabBtn.classList.remove('hidden');
     else usersTabBtn.classList.add('hidden');
   }
 
-  // Activity Log viewable by Admin, Approver, and Manager
+  // ── Activity Log: Admin (Alind), Approver (Yahia) and Manager ─────────────
   const activityTabBtn = document.getElementById('tab-btn-activity-log');
   if (activityTabBtn) {
     if (isAdmin || isApprover || isManager) activityTabBtn.classList.remove('hidden');
     else activityTabBtn.classList.add('hidden');
   }
 
-  const adminActions = document.getElementById('inventory-admin-actions');
-  if (adminActions) {
-    if (isAdmin || isApprover) {
-      document.getElementById('btn-admin-stock-in')?.classList.remove('hidden');
-      document.getElementById('btn-admin-new-card')?.classList.remove('hidden');
-    } else {
-      document.getElementById('btn-admin-stock-in')?.classList.add('hidden');
-      document.getElementById('btn-admin-new-card')?.classList.add('hidden');
-    }
-  }
+  // ── Stock In & Add New Card: Admin AND Approver (Yahia has same inventory access) ──
+  const showInventoryActions = isAdmin || isApprover;
+  document.getElementById('btn-admin-stock-in')?.classList.toggle('hidden', !showInventoryActions);
+  document.getElementById('btn-admin-new-card')?.classList.toggle('hidden', !showInventoryActions);
 
+  // ── Reconciliation: Admin AND Approver ────────────────────────────────────
   const reconcileBtn = document.getElementById('btn-open-reconcile');
-  if (reconcileBtn) {
-    if (isAdmin || isApprover) reconcileBtn.classList.remove('hidden');
-    else reconcileBtn.classList.add('hidden');
-  }
+  if (reconcileBtn) reconcileBtn.classList.toggle('hidden', !showInventoryActions);
+
+  // ── Delete card button in inventory table: Admin AND Approver ─────────────
+  // (applied dynamically inside renderInventoryTable via canManageInventory flag)
+  window._canManageInventory = showInventoryActions;
 }
 
 // ==================== REALTIME SYNC ====================
@@ -595,6 +589,8 @@ function renderInventoryTable() {
   }
 
   const isAdmin = currentUser?.role === 'admin';
+  // Yahia (approver) has same inventory management rights as Alind, except executing dispensation
+  const canManageInventory = currentUser?.role === 'admin' || currentUser?.role === 'approver';
 
   tbody.innerHTML = filtered.map(card => {
     const stockClass = card.is_low_stock 
@@ -602,7 +598,7 @@ function renderInventoryTable() {
       : 'bg-emerald-50 text-emerald-700 border border-emerald-200';
 
     let actionsHtml = `<span class="text-slate-400 text-[10px]">Read Only</span>`;
-    if (isAdmin) {
+    if (canManageInventory) {
       actionsHtml = `
         <div class="inline-flex items-center gap-1">
           <button onclick="quickStockIn(${card.id})" title="Stock In" class="p-1 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition">
@@ -735,7 +731,7 @@ async function loadRequesterHistory() {
           <td class="py-2.5 px-3 text-slate-600">${r.department}</td>
           <td class="py-2.5 px-3 text-slate-700">${r.reason}</td>
           <td class="py-2.5 px-3 text-center">${statusBadge}</td>
-          <td class="py-2.5 px-3 text-center text-[11px] text-slate-500 font-mono">${r.executed_by ? `Dispensed by ${r.executed_by}` : '-'}</td>
+          <td class="py-2.5 px-3 text-center text-[11px] font-mono text-slate-400">${r.status === 'EXECUTED' ? '✓ Dispensed' : '—'}</td>
           <td class="py-2.5 px-3 text-center">${pinDisplay}</td>
         </tr>
       `;
@@ -777,28 +773,30 @@ function renderRequestsQueue() {
   }
 
   const role = currentUser?.role;
-  const isApprover = role === 'approver'; // Yahia
-  const isAdmin = role === 'admin';       // Alind
+  // Yahia (approver): reviews and approves/rejects PENDING requests only
+  const isApprover = role === 'approver';
+  // Alind (admin): executes/dispenses APPROVED requests only
+  const isAdmin = role === 'admin';
 
   tbody.innerHTML = filtered.map(r => {
     let statusBadge = '';
     if (r.status === 'PENDING') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-pending">Pending Approval</span>`;
-    else if (r.status === 'APPROVED') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-approved">Approved</span>`;
-    else if (r.status === 'REJECTED') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-rejected">Rejected</span>`;
-    else if (r.status === 'EXECUTED') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-executed">Executed</span>`;
+    else if (r.status === 'APPROVED') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-approved">Approved ✓</span>`;
+    else if (r.status === 'REJECTED') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-rejected">Rejected ✗</span>`;
+    else if (r.status === 'EXECUTED') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-executed">Dispensed ✓</span>`;
 
-    let actionBtn = `<span class="text-slate-400 text-[10px]">-</span>`;
+    let actionBtn = `<span class="text-slate-400 text-[10px]">—</span>`;
 
-    // Yahia's action: Approve or Reject
+    // Yahia (approver) action: review PENDING requests
     if (isApprover && r.status === 'PENDING') {
       actionBtn = `
         <button onclick="openApprovalModal(${r.id})" class="px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold transition shadow-sm">
-          Review & Approve
+          Review &amp; Approve
         </button>
       `;
     }
 
-    // Alind's action: Execute & Dispense
+    // Alind (admin) action: dispense APPROVED requests
     if (isAdmin && r.status === 'APPROVED') {
       actionBtn = `
         <button onclick="openExecuteModal(${r.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1 mx-auto">
