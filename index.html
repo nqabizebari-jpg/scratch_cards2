@@ -36,7 +36,7 @@
     <div class="max-w-md w-full space-y-6 bg-slate-800/95 border border-slate-700/80 p-6 sm:p-8 rounded-3xl shadow-2xl relative z-10 backdrop-blur-xl">
       <!-- AVSI Logo & Title -->
       <div class="text-center space-y-3">
-        <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white p-2 shadow-xl shadow-sky-900/30 mb-1 border border-slate-200">
+        <div class="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-white p-2.5 shadow-xl shadow-sky-950/40 mb-1 border border-slate-200">
           <img src="avsi_logo.png" alt="AVSI Logo" class="w-full h-full object-contain">
         </div>
         <div>
@@ -60,7 +60,7 @@
             </span>
             <input type="text" id="username" required dir="ltr"
               class="w-full pl-9 rtl:pr-9 pr-4 rtl:pl-4 py-2.5 bg-slate-900/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 text-xs sm:text-sm transition"
-              placeholder="alind, yahia, or username">
+              placeholder="Username">
           </div>
         </div>
 
@@ -93,7 +93,7 @@
         <div class="flex items-center justify-between h-14 sm:h-16 gap-2">
           <!-- Logo & Title -->
           <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1 shadow-sm shrink-0">
+            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1 shadow-sm shrink-0">
               <img src="avsi_logo.png" alt="AVSI" class="w-full h-full object-contain">
             </div>
             <div class="min-w-0">
@@ -161,6 +161,11 @@
             <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
             <span data-i18n="tab_reports">Audit & Reports</span>
           </button>
+          <button onclick="switchTab('activity-log')" id="tab-btn-activity-log"
+            class="tab-btn inline-flex items-center gap-1.5 px-3 py-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900 text-xs sm:text-sm font-semibold">
+            <i data-lucide="shield" class="w-3.5 h-3.5"></i>
+            <span data-i18n="tab_activity">Activity Log</span>
+          </button>
           <button onclick="switchTab('users')" id="tab-btn-users"
             class="tab-btn inline-flex items-center gap-1.5 px-3 py-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900 text-xs sm:text-sm font-semibold">
             <i data-lucide="users" class="w-3.5 h-3.5"></i>
@@ -181,7 +186,7 @@
               Staff Request Portal
             </span>
             <h2 class="text-lg sm:text-xl font-bold" data-i18n="requester_welcome">Request Mobile / Internet Scratch Cards</h2>
-            <p class="text-xs text-sky-100 mt-0.5" data-i18n="requester_desc">Submit your card request for activity or office use. It will be sent to Yahia for approval and Alind for issuance.</p>
+            <p class="text-xs text-sky-100 mt-0.5" data-i18n="requester_desc">Submit your card request for activity or office use. It will be sent for approval and issuance.</p>
           </div>
           <button onclick="openModal('staff-request-modal')"
             class="w-full sm:w-auto px-5 py-2.5 bg-white text-sky-700 hover:bg-sky-50 rounded-xl text-xs font-extrabold shadow-md transition flex items-center justify-center gap-2">
@@ -208,8 +213,9 @@
                   <th class="py-2.5 px-3 text-center">Qty</th>
                   <th class="py-2.5 px-3">Department</th>
                   <th class="py-2.5 px-3">Reason / Activity</th>
-                  <th class="py-2.5 px-3 text-center">Approval (Yahia)</th>
-                  <th class="py-2.5 px-3 text-center">Execution (Alind)</th>
+                  <th class="py-2.5 px-3 text-center">Approval Status</th>
+                  <th class="py-2.5 px-3 text-center">Dispensation Status</th>
+                  <th class="py-2.5 px-3 text-center">Card PIN / Code</th>
                 </tr>
               </thead>
               <tbody id="requester-history-tbody" class="divide-y divide-slate-100">
@@ -376,7 +382,7 @@
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
             <div>
               <h3 class="text-sm sm:text-base font-bold text-slate-900" data-i18n="requests_title">Card Requests Workflow</h3>
-              <p class="text-xs text-slate-500 mt-0.5" data-i18n="requests_subtitle">Yahia approves staff requests; Alind dispenses cards and marks as executed.</p>
+              <p class="text-xs text-slate-500 mt-0.5" data-i18n="requests_subtitle">Approver reviews staff requests; Authorized custodian dispenses cards and marks as executed.</p>
             </div>
             <!-- Status Filter -->
             <div class="flex items-center gap-1.5">
@@ -531,13 +537,44 @@
         </div>
       </section>
 
-      <!-- ================= TAB 5: USER ROLE MANAGEMENT (Alind Admin Only) ================= -->
+      <!-- ================= TAB 5: ACTIVITY LOG ================= -->
+      <section id="tab-content-activity-log" class="hidden space-y-4 sm:space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h3 class="text-sm sm:text-base font-bold text-slate-900" data-i18n="activity_log_title">Security & System Activity Log</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Chronological record of logins, card stock adjustments, requests, and approvals.</p>
+            </div>
+            <button onclick="loadActivityLog()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition" title="Refresh">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left rtl:text-right text-xs text-slate-600">
+              <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                <tr>
+                  <th class="py-2.5 px-3">Date & Time</th>
+                  <th class="py-2.5 px-3">User</th>
+                  <th class="py-2.5 px-3 text-center">Action</th>
+                  <th class="py-2.5 px-3">Description</th>
+                </tr>
+              </thead>
+              <tbody id="activity-log-tbody" class="divide-y divide-slate-100">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 6: USER ROLE MANAGEMENT (Alind Admin Only) ================= -->
       <section id="tab-content-users" class="hidden space-y-4 sm:space-y-6">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4">
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
             <div>
               <h3 class="text-sm sm:text-base font-bold text-slate-900" data-i18n="user_mgmt_title">Staff Accounts & Permissions</h3>
-              <p class="text-xs text-slate-500 mt-0.5" data-i18n="user_mgmt_sub">Alind assigns roles for Staff Requesters, Approvers (Yahia), and Management Viewers.</p>
+              <p class="text-xs text-slate-500 mt-0.5" data-i18n="user_mgmt_sub">Manage staff accounts and permissions for Staff Requesters and Management Viewers.</p>
             </div>
             <button onclick="openModal('new-user-modal')"
               class="px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5">
@@ -644,7 +681,7 @@
 
       <div>
         <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="form_notes">Approval Notes / Comment</label>
-        <input type="text" id="approval-comment" placeholder="Optional notes for Alind or Requester..."
+        <input type="text" id="approval-comment" placeholder="Optional notes for requester..."
           class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
       </div>
 
@@ -885,9 +922,7 @@
             <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="user_role">Role / Privilege</label>
             <select id="new-user-role" required class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold">
               <option value="requester">Staff Requester (Request Only)</option>
-              <option value="manager">Management (Read-Only Overview)</option>
-              <option value="approver">Approver (Yahia)</option>
-              <option value="admin">Administrator (Alind)</option>
+              <option value="manager">Management Overseer (Read-Only Overview)</option>
             </select>
           </div>
           <div>

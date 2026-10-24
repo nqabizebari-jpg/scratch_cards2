@@ -27,9 +27,10 @@ const translations = {
     tab_requests: 'Card Requests',
     tab_transactions: 'Transactions',
     tab_reports: 'Audit & Reports',
+    tab_activity: 'Activity Log',
     tab_users: 'User Roles',
     requester_welcome: 'Request Mobile / Internet Scratch Cards',
-    requester_desc: 'Submit your card request for activity or office use. It will be sent to Yahia for approval and Alind for issuance.',
+    requester_desc: 'Submit your card request for activity or office use. It will be sent for approval and issuance.',
     btn_new_request: '+ New Card Request',
     my_requests_title: 'My Card Requests & Status',
     btn_refresh: 'Refresh',
@@ -38,7 +39,7 @@ const translations = {
     kpi_face_value: 'Face Value',
     kpi_face_sub: 'Official Selling Worth',
     kpi_pending_req: 'Pending Requests',
-    kpi_pending_sub: 'Awaiting Yahia',
+    kpi_pending_sub: 'Awaiting Approval',
     kpi_low_stock: 'Low Stock Items',
     kpi_low_sub: 'Requires Reorder',
     inventory_table_title: 'Safe Inventory Overview',
@@ -59,7 +60,7 @@ const translations = {
     th_total_value: 'Total Value',
     th_actions: 'Actions',
     requests_title: 'Card Requests Workflow',
-    requests_subtitle: 'Yahia approves staff requests; Alind dispenses cards and marks as executed.',
+    requests_subtitle: 'Approver reviews staff requests; Authorized custodian dispenses cards and marks as executed.',
     trans_title: 'Complete Safe Activity Log',
     trans_subtitle: 'Full record of all card receipts, issuances, and PIN distributions.',
     audit_title: 'Safe Inventory Audit & Reports',
@@ -69,7 +70,7 @@ const translations = {
     btn_excel: 'CSV Export',
     btn_show_audit: 'Calculate',
     user_mgmt_title: 'Staff Accounts & Permissions',
-    user_mgmt_sub: 'Alind assigns roles for Staff Requesters, Approvers (Yahia), and Management Viewers.',
+    user_mgmt_sub: 'Manage staff accounts and permissions for Staff Requesters and Management Viewers.',
     btn_add_user: '+ Add User',
     modal_request_title: 'Submit Scratch Card Request',
     select_card: 'Card Provider & Denomination',
@@ -120,9 +121,10 @@ const translations = {
     tab_requests: 'طلبات البطاقات',
     tab_transactions: 'سجل الحركات',
     tab_reports: 'الجرد والتقارير',
+    tab_activity: 'سجل النشاطات والأمان',
     tab_users: 'صلاحيات المستخدمين',
     requester_welcome: 'طلب بطاقات شحن (موبايل / إنترنت)',
-    requester_desc: 'قدم طلبك للنشاط أو العمل المكتبي. يتم مراجعته والموافقة عليه من قبل يحيى، ثم صرفه من قبل ألند.',
+    requester_desc: 'قدم طلبك للنشاط أو العمل المكتبي ليتم مراجعته واعتماده ثم صرفه من الخزنة.',
     btn_new_request: '+ طلب بطاقات جديد',
     my_requests_title: 'سجل وحالة طلباتي السابقة',
     btn_refresh: 'تحديث',
@@ -131,7 +133,7 @@ const translations = {
     kpi_face_value: 'القيمة الاسمية',
     kpi_face_sub: 'إجمالي قيمة الرصيد',
     kpi_pending_req: 'طلبات معلقة',
-    kpi_pending_sub: 'بانتظار موافقة يحيى',
+    kpi_pending_sub: 'بانتظار الموافقة',
     kpi_low_stock: 'بطاقات منخفضة',
     kpi_low_sub: 'تحتاج إلى تزويد',
     inventory_table_title: 'مخزون بطاقات الخزنة الحالية',
@@ -152,7 +154,7 @@ const translations = {
     th_total_value: 'إجمالي القيمة',
     th_actions: 'إجراءات',
     requests_title: 'إدارة دورة طلبات البطاقات',
-    requests_subtitle: 'يحيى يعتمد طلبات الكادر؛ وألند يقوم بصرف البطاقات وخصمها من الخزنة.',
+    requests_subtitle: 'يقوم مسؤول الموافقة بمراجعة طلبات الكادر؛ ويقوم أمين الصندوق بصرف البطاقات وخصمها من الخزنة.',
     trans_title: 'السجل الشامل لحركات الخزنة',
     trans_subtitle: 'تسجيل كامل لكافة الاستلامات والإصدارات وأرقام البطاقات.',
     audit_title: 'جرد الخزنة والمطابقة الرسمية',
@@ -162,7 +164,7 @@ const translations = {
     btn_excel: 'تصدير (CSV)',
     btn_show_audit: 'عرض الجرد',
     user_mgmt_title: 'حسابات وصلاحيات الموظفين',
-    user_mgmt_sub: 'يقوم ألند بإنشاء وتحديد صلاحيات طالبي البطاقات والمشرفين والمدراء.',
+    user_mgmt_sub: 'إدارة وتحديد صلاحيات طالبي البطاقات والمشرفين.',
     btn_add_user: '+ إضافة مستخدم',
     modal_request_title: 'تقديم طلب بطاقات كشط',
     select_card: 'الشركة وفئة البطاقة',
@@ -171,10 +173,10 @@ const translations = {
     form_reason: 'النشاط / المشروع / السبب',
     btn_cancel: 'إلغاء',
     btn_submit_req: 'إرسال الطلب',
-    modal_approval_title: 'مراجعة واعتماد الطلب (يحيى)',
+    modal_approval_title: 'مراجعة واعتماد الطلب',
     btn_reject: 'رفض الطلب',
     btn_approve: 'الموافقة على الطلب',
-    modal_execute_title: 'صرف البطاقات المعتمدة (ألند)',
+    modal_execute_title: 'صرف وتفريغ البطاقات المعتمدة',
     form_pin: 'أرقام الـ PIN أو التسلسل (اختياري)',
     form_notes: 'ملاحظات الصرف',
     btn_confirm_dispense: 'تأكيد الصرف والخصم من الخزنة',
@@ -321,6 +323,10 @@ async function handleLogin(e) {
       throw new Error(currentLang === 'ar' ? 'اسم المستخدم أو كلمة المرور غير صحيحة.' : 'Invalid username or password.');
     }
 
+    if (user.is_active === false) {
+      throw new Error(currentLang === 'ar' ? 'تم تعطيل هذا الحساب من قبل الإدارة. يرجى مراجعة المسؤول.' : 'This account has been deactivated. Please contact the administrator.');
+    }
+
     const passwordMatches = (user.password_hash === hashed) || (user.password_hash === password);
     if (!passwordMatches) {
       throw new Error(currentLang === 'ar' ? 'اسم المستخدم أو كلمة المرور غير صحيحة.' : 'Invalid username or password.');
@@ -369,8 +375,8 @@ function showAppView() {
   document.getElementById('user-role-label').textContent = currentUser.role.toUpperCase();
 
   const roleBadgeMap = {
-    admin: 'Administrator (Alind)',
-    approver: 'Approver (Yahia)',
+    admin: 'Administrator',
+    approver: 'Approver',
     manager: 'Management (Overview)',
     requester: 'Staff Requester'
   };
@@ -401,13 +407,15 @@ function applyRolePermissions() {
   if (isRequester) {
     requesterPortal.classList.remove('hidden');
     managerNav.classList.add('hidden');
-    dashboardSec.classList.add('hidden');
+    // Hide all manager tab contents
+    document.querySelectorAll('section[id^="tab-content-"]').forEach(s => s.classList.add('hidden'));
     loadRequesterHistory();
     return;
   } else {
     requesterPortal.classList.add('hidden');
     managerNav.classList.remove('hidden');
-    dashboardSec.classList.remove('hidden');
+    // Default show dashboard
+    switchTab('dashboard');
   }
 
   // Admin Alind only permissions
@@ -417,9 +425,16 @@ function applyRolePermissions() {
     else usersTabBtn.classList.add('hidden');
   }
 
+  // Activity Log viewable by Admin, Approver, and Manager
+  const activityTabBtn = document.getElementById('tab-btn-activity-log');
+  if (activityTabBtn) {
+    if (isAdmin || isApprover || isManager) activityTabBtn.classList.remove('hidden');
+    else activityTabBtn.classList.add('hidden');
+  }
+
   const adminActions = document.getElementById('inventory-admin-actions');
   if (adminActions) {
-    if (isAdmin) {
+    if (isAdmin || isApprover) {
       document.getElementById('btn-admin-stock-in')?.classList.remove('hidden');
       document.getElementById('btn-admin-new-card')?.classList.remove('hidden');
     } else {
@@ -430,7 +445,7 @@ function applyRolePermissions() {
 
   const reconcileBtn = document.getElementById('btn-open-reconcile');
   if (reconcileBtn) {
-    if (isAdmin) reconcileBtn.classList.remove('hidden');
+    if (isAdmin || isApprover) reconcileBtn.classList.remove('hidden');
     else reconcileBtn.classList.add('hidden');
   }
 }
@@ -669,7 +684,7 @@ async function handleStaffRequestSubmit(e) {
 
     logAudit('CARD_REQUEST_SUBMIT', `Staff [${currentUser.fullName}] requested ${quantity} cards.`);
     closeModal('staff-request-modal');
-    showToast('Card request submitted successfully to Yahia for approval!', 'success');
+    showToast('Card request submitted successfully for approval!', 'success');
     
     if (currentUser.role === 'requester') {
       loadRequesterHistory();
@@ -695,16 +710,22 @@ async function loadRequesterHistory() {
     if (error) throw error;
 
     if (!requests || requests.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400">No requests submitted yet. Click + New Card Request above.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">No requests submitted yet. Click + New Card Request above.</td></tr>`;
       return;
     }
 
     tbody.innerHTML = requests.map(r => {
       let statusBadge = '';
       if (r.status === 'PENDING') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-pending">Pending Approval</span>`;
-      else if (r.status === 'APPROVED') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-approved">Approved (Yahia)</span>`;
+      else if (r.status === 'APPROVED') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-approved">Approved</span>`;
       else if (r.status === 'REJECTED') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-rejected">Rejected</span>`;
-      else if (r.status === 'EXECUTED') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-executed">Dispensed (Alind)</span>`;
+      else if (r.status === 'EXECUTED') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-executed">Dispensed</span>`;
+
+      // Confidential PIN: visible only to this requester when executed
+      let pinDisplay = '<span class="text-slate-400 font-mono text-xs">-</span>';
+      if (r.status === 'EXECUTED' && r.pin_numbers) {
+        pinDisplay = `<span class="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300 font-mono font-bold text-xs select-all">${r.pin_numbers}</span>`;
+      }
 
       return `
         <tr class="hover:bg-slate-50 transition">
@@ -715,6 +736,7 @@ async function loadRequesterHistory() {
           <td class="py-2.5 px-3 text-slate-700">${r.reason}</td>
           <td class="py-2.5 px-3 text-center">${statusBadge}</td>
           <td class="py-2.5 px-3 text-center text-[11px] text-slate-500 font-mono">${r.executed_by ? `Dispensed by ${r.executed_by}` : '-'}</td>
+          <td class="py-2.5 px-3 text-center">${pinDisplay}</td>
         </tr>
       `;
     }).join('');
@@ -834,7 +856,7 @@ async function submitApprovalDecision(decision) {
 
     if (error) throw error;
 
-    logAudit('REQUEST_REVIEW', `Yahia marked request #${requestId} as ${decision}.`);
+    logAudit('REQUEST_REVIEW', `Approver [${currentUser.fullName}] marked request #${requestId} as ${decision}.`);
     closeModal('approval-modal');
     showToast(`Request has been ${decision}!`, 'success');
     loadRequestsData();
@@ -904,7 +926,7 @@ async function submitExecution() {
       execution_notes: notes || null
     }).eq('id', requestId);
 
-    logAudit('REQUEST_EXECUTED', `Alind dispensed ${req.quantity} cards for [${req.requester_name}].`);
+    logAudit('REQUEST_EXECUTED', `Dispensed ${req.quantity} cards for [${req.requester_name}] by [${currentUser.fullName}].`);
     closeModal('execute-modal');
     showToast(`Cards dispensed and stock deducted successfully!`, 'success');
     loadRequestsData();
@@ -1068,10 +1090,15 @@ async function loadUsersData() {
           <span class="inline-block w-2 h-2 rounded-full ${u.is_active ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
         </td>
         <td class="py-2.5 px-3 text-center text-xs">
-          ${u.id === currentUser.id ? '<span class="text-slate-400">Current</span>' : `
-            <button onclick="toggleUserStatus(${u.id}, ${!u.is_active})" class="text-sky-600 hover:underline">
-              ${u.is_active ? 'Deactivate' : 'Activate'}
-            </button>
+          ${u.id === currentUser.id ? '<span class="text-slate-400 font-bold">Current (You)</span>' : `
+            <div class="inline-flex items-center gap-2">
+              <button onclick="toggleUserStatus(${u.id}, ${!u.is_active}, '${u.username}')" class="text-xs font-semibold ${u.is_active ? 'text-amber-600 hover:underline' : 'text-emerald-600 hover:underline'}">
+                ${u.is_active ? 'Deactivate' : 'Activate'}
+              </button>
+              <button onclick="deleteUserAccount(${u.id}, '${u.username}')" class="text-xs font-bold text-rose-600 hover:text-rose-800 hover:underline">
+                Delete
+              </button>
+            </div>
           `}
         </td>
       </tr>
@@ -1112,10 +1139,26 @@ async function handleCreateUser(e) {
   }
 }
 
-async function toggleUserStatus(userId, activate) {
+async function toggleUserStatus(userId, activate, username) {
   try {
     await db.from('users').update({ is_active: activate }).eq('id', userId);
-    showToast('User status updated.', 'success');
+    logAudit('USER_STATUS_CHANGE', `Admin changed user [${username}] active status to: ${activate}`);
+    showToast(`User status updated to ${activate ? 'Active' : 'Inactive'}.`, 'success');
+    loadUsersData();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function deleteUserAccount(userId, username) {
+  if (!confirm(`Are you sure you want to permanently delete user account [${username}]?`)) return;
+
+  try {
+    const { error } = await db.from('users').delete().eq('id', userId);
+    if (error) throw error;
+
+    logAudit('USER_DELETED', `Admin permanently deleted user account [${username}].`);
+    showToast(`User [${username}] deleted.`, 'success');
     loadUsersData();
   } catch (err) {
     showToast(err.message, 'error');
@@ -1377,6 +1420,40 @@ function logAudit(action, description) {
   }).then(() => {});
 }
 
+// Activity Log Loading
+async function loadActivityLog() {
+  const tbody = document.getElementById('activity-log-tbody');
+  if (!tbody) return;
+
+  try {
+    const { data: logs, error } = await db
+      .from('audit_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(60);
+
+    if (error) throw error;
+
+    if (!logs || logs.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">No activity recorded yet.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = logs.map(l => `
+      <tr class="hover:bg-slate-50 transition">
+        <td class="py-2 px-3 font-mono text-[11px] text-slate-500 whitespace-nowrap">${new Date(l.created_at).toLocaleString()}</td>
+        <td class="py-2 px-3 font-bold text-slate-800">${l.username || 'System'}</td>
+        <td class="py-2 px-3 text-center">
+          <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold font-mono uppercase bg-slate-100 text-slate-700">${l.action}</span>
+        </td>
+        <td class="py-2 px-3 text-slate-600 text-xs">${l.description}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
 // Tabs & Navigation
 function switchTab(tabId) {
   document.querySelectorAll('section[id^="tab-content-"]').forEach(s => s.classList.add('hidden'));
@@ -1397,6 +1474,7 @@ function switchTab(tabId) {
   if (tabId === 'requests') loadRequestsData();
   else if (tabId === 'transactions') loadTransactions();
   else if (tabId === 'reports') generateReport();
+  else if (tabId === 'activity-log') loadActivityLog();
   else if (tabId === 'users') loadUsersData();
 
   refreshIcons();
