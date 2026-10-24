@@ -109,7 +109,41 @@ const translations = {
     new_password: 'New Password',
     btn_save_changes: 'Save Changes',
     cards_unit: 'cards',
-    alert_banner_title: 'Low Stock Alert in Safe!'
+    alert_banner_title: 'Low Stock Alert in Safe!',
+    th_date_time: 'Date & Time',
+    th_card_val: 'Card & Value',
+    th_qty: 'Qty',
+    th_reason_activity: 'Reason / Activity',
+    th_approval_status: 'Approval Status',
+    th_dispense_status: 'Dispensation Status',
+    th_pin_code: 'Card PIN / Code',
+    th_requester_staff: 'Requester Staff',
+    th_card_requested: 'Card Requested',
+    th_reason_project: 'Reason / Project',
+    th_status: 'Status',
+    th_type: 'Type',
+    th_card_denom: 'Card & Denom',
+    th_recipient_supplier: 'Recipient / Supplier',
+    th_dept_reason: 'Department / Reason',
+    th_pin_numbers: 'PIN Numbers',
+    th_handled_by: 'Handled By',
+    th_user: 'User',
+    th_description: 'Description',
+    filter_req_all: 'All Requests',
+    filter_req_pending: 'Pending Only (Needs Action)',
+    filter_req_approved: 'Approved (Ready to Dispense)',
+    filter_req_executed: 'Executed',
+    filter_req_rejected: 'Rejected',
+    filter_trans_all: 'All Types',
+    filter_trans_receipt: 'Stock In (Receipts)',
+    filter_trans_issuance: 'Stock Out (Issuances)',
+    status_pending: 'Pending Approval',
+    status_approved: 'Approved',
+    status_rejected: 'Rejected',
+    status_dispensed: 'Dispensed',
+    btn_review_approve: 'Review & Approve',
+    btn_dispense: 'Dispense',
+    read_only: 'Read Only'
   },
   ar: {
     app_title: 'نظام إدارة بطاقات الخزنة',
@@ -203,7 +237,41 @@ const translations = {
     new_password: 'كلمة المرور الجديدة',
     btn_save_changes: 'حفظ التعديلات',
     cards_unit: 'بطاقة',
-    alert_banner_title: 'تنبيه: اقتراب نفاد بعض البطاقات في الخزنة!'
+    alert_banner_title: 'تنبيه: اقتراب نفاد بعض البطاقات في الخزنة!',
+    th_date_time: 'التاريخ والوقت',
+    th_card_val: 'فئة وقيمة البطاقة',
+    th_qty: 'الكمية',
+    th_reason_activity: 'النشاط / السبب',
+    th_approval_status: 'حالة الموافقة',
+    th_dispense_status: 'حالة الصرف',
+    th_pin_code: 'كود / PIN البطاقة',
+    th_requester_staff: 'الموظف مقدم الطلب',
+    th_card_requested: 'البطاقة المطلوبة',
+    th_reason_project: 'النشاط / المشروع',
+    th_status: 'الحالة',
+    th_type: 'نوع الحركة',
+    th_card_denom: 'الشركة والفئة',
+    th_recipient_supplier: 'المستلم / المورد',
+    th_dept_reason: 'القسم / السبب',
+    th_pin_numbers: 'أرقام الـ PIN',
+    th_handled_by: 'تمت بواسطة',
+    th_user: 'المستخدم',
+    th_description: 'تفاصيل النشاط',
+    filter_req_all: 'كافة الطلبات',
+    filter_req_pending: 'المعلقة فقط (تحتاج إجراء)',
+    filter_req_approved: 'المعتمدة (جاهزة للصرف)',
+    filter_req_executed: 'المصروفة',
+    filter_req_rejected: 'المرفوضة',
+    filter_trans_all: 'كافة الحركات',
+    filter_trans_receipt: 'استلام رصيد (إيداع)',
+    filter_trans_issuance: 'صرف رصيد (سحب)',
+    status_pending: 'قيد الموافقة',
+    status_approved: 'معتمد',
+    status_rejected: 'مرفوض',
+    status_dispensed: 'تم الصرف',
+    btn_review_approve: 'مراجعة واعتماد',
+    btn_dispense: 'صرف البطاقات',
+    read_only: 'عرض فقط'
   }
 };
 
@@ -270,6 +338,24 @@ function changeLanguage(lang) {
   applyLanguage(lang);
 }
 
+function formatDateTime(isoString) {
+  if (!isoString) return '<span class="text-slate-400 font-mono">-</span>';
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return `<span class="font-mono text-xs text-slate-500">${isoString}</span>`;
+  const dateStr = d.toLocaleDateString(currentLang === 'ar' ? 'en-CA' : 'en-US');
+  const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return `<div><span class="font-bold text-slate-800 text-xs">${dateStr}</span> <span class="text-[10px] text-slate-400 font-mono block sm:inline sm:ml-1">${timeStr}</span></div>`;
+}
+
+function getStatusBadge(status) {
+  const dict = translations[currentLang] || translations.en;
+  if (status === 'PENDING') return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-pending">${dict.status_pending || 'Pending Approval'}</span>`;
+  if (status === 'APPROVED') return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-approved">${dict.status_approved || 'Approved'}</span>`;
+  if (status === 'REJECTED') return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-rejected">${dict.status_rejected || 'Rejected'}</span>`;
+  if (status === 'EXECUTED') return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-executed">${dict.status_dispensed || 'Dispensed'}</span>`;
+  return status;
+}
+
 function applyLanguage(lang) {
   currentLang = lang;
   const isRtl = lang === 'ar';
@@ -293,9 +379,14 @@ function applyLanguage(lang) {
     if (dict[key] !== undefined) el.setAttribute('placeholder', dict[key]);
   });
 
-  renderInventoryTable();
-  populateCardSelects();
-  renderRequestsQueue();
+  if (currentUser?.role === 'requester') {
+    loadRequesterHistory();
+  } else {
+    renderInventoryTable();
+    populateCardSelects();
+    renderRequestsQueue();
+    loadTransactions();
+  }
   refreshIcons();
 }
 
@@ -706,32 +797,31 @@ async function loadRequesterHistory() {
     if (error) throw error;
 
     if (!requests || requests.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">No requests submitted yet. Click + New Card Request above.</td></tr>`;
+      const emptyMsg = (translations[currentLang] || translations.en).no_requests_user || 'No requests submitted yet. Click + New Card Request above.';
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400 font-medium">${emptyMsg}</td></tr>`;
       return;
     }
 
     tbody.innerHTML = requests.map(r => {
-      let statusBadge = '';
-      if (r.status === 'PENDING') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-pending">Pending Approval</span>`;
-      else if (r.status === 'APPROVED') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-approved">Approved</span>`;
-      else if (r.status === 'REJECTED') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-rejected">Rejected</span>`;
-      else if (r.status === 'EXECUTED') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-executed">Dispensed</span>`;
+      const statusBadge = getStatusBadge(r.status);
+      const isExecuted = r.status === 'EXECUTED';
+      const dispenseText = isExecuted ? (currentLang === 'ar' ? '✓ تم الصرف' : '✓ Dispensed') : '—';
 
       // Confidential PIN: visible only to this requester when executed
       let pinDisplay = '<span class="text-slate-400 font-mono text-xs">-</span>';
-      if (r.status === 'EXECUTED' && r.pin_numbers) {
-        pinDisplay = `<span class="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300 font-mono font-bold text-xs select-all">${r.pin_numbers}</span>`;
+      if (isExecuted && r.pin_numbers) {
+        pinDisplay = `<span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300 font-mono font-bold text-xs select-all shadow-sm tracking-wide">${r.pin_numbers}</span>`;
       }
 
       return `
         <tr class="hover:bg-slate-50 transition">
-          <td class="py-2.5 px-3 font-mono text-[11px] text-slate-500">${new Date(r.created_at).toLocaleDateString()}</td>
+          <td class="py-2.5 px-3 font-mono text-[11px] text-slate-600">${formatDateTime(r.created_at)}</td>
           <td class="py-2.5 px-3 font-bold text-slate-900">${r.card_types?.provider} ${r.card_types?.denomination?.toLocaleString()} IQD</td>
           <td class="py-2.5 px-3 text-center font-extrabold text-sky-600">${r.quantity}</td>
           <td class="py-2.5 px-3 text-slate-600">${r.department}</td>
           <td class="py-2.5 px-3 text-slate-700">${r.reason}</td>
           <td class="py-2.5 px-3 text-center">${statusBadge}</td>
-          <td class="py-2.5 px-3 text-center text-[11px] font-mono text-slate-400">${r.status === 'EXECUTED' ? '✓ Dispensed' : '—'}</td>
+          <td class="py-2.5 px-3 text-center text-[11px] font-mono text-slate-500">${dispenseText}</td>
           <td class="py-2.5 px-3 text-center">${pinDisplay}</td>
         </tr>
       `;
@@ -768,7 +858,8 @@ function renderRequestsQueue() {
   const filtered = allRequests.filter(r => filter === 'all' || r.status === filter);
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">No requests in this queue.</td></tr>`;
+    const emptyMsg = (translations[currentLang] || translations.en).no_requests_queue || 'No requests in this queue.';
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400 font-medium">${emptyMsg}</td></tr>`;
     return;
   }
 
@@ -777,21 +868,17 @@ function renderRequestsQueue() {
   const isApprover = role === 'approver';
   // Alind (admin): executes/dispenses APPROVED requests only
   const isAdmin = role === 'admin';
+  const dict = translations[currentLang] || translations.en;
 
   tbody.innerHTML = filtered.map(r => {
-    let statusBadge = '';
-    if (r.status === 'PENDING') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-pending">Pending Approval</span>`;
-    else if (r.status === 'APPROVED') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-approved">Approved ✓</span>`;
-    else if (r.status === 'REJECTED') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-rejected">Rejected ✗</span>`;
-    else if (r.status === 'EXECUTED') statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold status-badge-executed">Dispensed ✓</span>`;
-
+    const statusBadge = getStatusBadge(r.status);
     let actionBtn = `<span class="text-slate-400 text-[10px]">—</span>`;
 
     // Yahia (approver) action: review PENDING requests
     if (isApprover && r.status === 'PENDING') {
       actionBtn = `
         <button onclick="openApprovalModal(${r.id})" class="px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold transition shadow-sm">
-          Review &amp; Approve
+          ${dict.btn_review_approve || 'Review & Approve'}
         </button>
       `;
     }
@@ -801,14 +888,14 @@ function renderRequestsQueue() {
       actionBtn = `
         <button onclick="openExecuteModal(${r.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1 mx-auto">
           <i data-lucide="package-check" class="w-3.5 h-3.5"></i>
-          <span>Dispense</span>
+          <span>${dict.btn_dispense || 'Dispense'}</span>
         </button>
       `;
     }
 
     return `
       <tr class="hover:bg-slate-50 transition">
-        <td class="py-2.5 px-3 font-mono text-[11px] text-slate-500">${new Date(r.created_at).toLocaleDateString()}</td>
+        <td class="py-2.5 px-3 font-mono text-[11px] text-slate-600">${formatDateTime(r.created_at)}</td>
         <td class="py-2.5 px-3 font-bold text-slate-900">${r.requester_name}</td>
         <td class="py-2.5 px-3 text-slate-600">${r.department}</td>
         <td class="py-2.5 px-3 font-semibold text-slate-800">${r.card_types?.provider} ${r.card_types?.denomination?.toLocaleString()} IQD</td>
@@ -1007,7 +1094,11 @@ async function handleAddNewCardType(e) {
     showToast('New card type registered successfully!', 'success');
     loadDashboardData();
   } catch (err) {
-    showToast(err.message, 'error');
+    if (err.code === '23505' || err.status === 409 || (err.message && err.message.toLowerCase().includes('duplicate'))) {
+      showToast(currentLang === 'ar' ? 'هذه الفئة مسجلة مسبقاً بنفس الشركة والقيمة والنوع!' : 'This card type already exists with the same provider, denomination, and category!', 'error');
+    } else {
+      showToast(err.message, 'error');
+    }
   }
 }
 
@@ -1133,7 +1224,11 @@ async function handleCreateUser(e) {
     showToast(`User account created for ${fullName}!`, 'success');
     loadUsersData();
   } catch (err) {
-    showToast(err.message, 'error');
+    if (err.code === '23505' || err.status === 409 || (err.message && err.message.toLowerCase().includes('duplicate'))) {
+      showToast(currentLang === 'ar' ? 'اسم المستخدم هذا مسجل مسبقاً، يرجى اختيار اسم آخر!' : 'This username is already taken. Please choose another.', 'error');
+    } else {
+      showToast(err.message, 'error');
+    }
   }
 }
 
@@ -1221,7 +1316,7 @@ async function loadTransactions() {
         detail: r.notes || '-',
         pin: r.pin_numbers || '-',
         handler: r.received_by,
-        date: r.date_received
+        date: r.created_at || r.date_received
       }));
     }
 
@@ -1234,12 +1329,13 @@ async function loadTransactions() {
         detail: `${i.department || ''} - ${i.reason}`,
         pin: i.pin_numbers || '-',
         handler: i.issued_by,
-        date: i.date_issued
+        date: i.created_at || i.date_issued
       }));
     }
 
     if (list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">No transactions recorded.</td></tr>`;
+      const emptyMsg = (translations[currentLang] || translations.en).no_transactions || 'No transactions recorded.';
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400 font-medium">${emptyMsg}</td></tr>`;
       return;
     }
 
@@ -1247,7 +1343,7 @@ async function loadTransactions() {
       <tr class="hover:bg-slate-50 transition">
         <td class="py-2.5 px-3">
           <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${item.type === 'STOCK_IN' ? 'bg-emerald-100 text-emerald-800' : 'bg-sky-100 text-sky-800'}">
-            ${item.type === 'STOCK_IN' ? 'Stock In' : 'Dispensed'}
+            ${item.type === 'STOCK_IN' ? (currentLang === 'ar' ? 'استلام رصيد' : 'Stock In') : (currentLang === 'ar' ? 'صرف بطاقات' : 'Dispensed')}
           </span>
         </td>
         <td class="py-2.5 px-3 font-bold text-slate-900">${item.card}</td>
@@ -1256,7 +1352,7 @@ async function loadTransactions() {
         <td class="py-2.5 px-3 text-slate-500">${item.detail}</td>
         <td class="py-2.5 px-3 font-mono text-xs text-slate-600">${item.pin}</td>
         <td class="py-2.5 px-3 text-slate-700">${item.handler}</td>
-        <td class="py-2.5 px-3 font-mono text-[11px] text-slate-400">${item.date}</td>
+        <td class="py-2.5 px-3 font-mono text-[11px] text-slate-600">${formatDateTime(item.date)}</td>
       </tr>
     `).join('');
 
@@ -1433,13 +1529,14 @@ async function loadActivityLog() {
     if (error) throw error;
 
     if (!logs || logs.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">No activity recorded yet.</td></tr>`;
+      const emptyMsg = (translations[currentLang] || translations.en).no_logs || 'No activity recorded yet.';
+      tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400 font-medium">${emptyMsg}</td></tr>`;
       return;
     }
 
     tbody.innerHTML = logs.map(l => `
       <tr class="hover:bg-slate-50 transition">
-        <td class="py-2 px-3 font-mono text-[11px] text-slate-500 whitespace-nowrap">${new Date(l.created_at).toLocaleString()}</td>
+        <td class="py-2 px-3 font-mono text-[11px] text-slate-600 whitespace-nowrap">${formatDateTime(l.created_at)}</td>
         <td class="py-2 px-3 font-bold text-slate-800">${l.username || 'System'}</td>
         <td class="py-2 px-3 text-center">
           <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold font-mono uppercase bg-slate-100 text-slate-700">${l.action}</span>

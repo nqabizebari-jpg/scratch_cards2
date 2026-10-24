@@ -70,7 +70,7 @@
             <span class="absolute inset-y-0 left-0 rtl:right-0 rtl:left-auto flex items-center pl-3 rtl:pr-3 pointer-events-none text-slate-400">
               <i data-lucide="lock" class="w-4 h-4"></i>
             </span>
-            <input type="password" id="password" required dir="ltr"
+            <input type="password" id="password" required dir="ltr" autocomplete="current-password"
               class="w-full pl-9 rtl:pr-9 pr-4 rtl:pl-4 py-2.5 bg-slate-900/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 text-xs sm:text-sm transition"
               placeholder="••••••••">
           </div>
@@ -208,14 +208,14 @@
             <table class="w-full text-left rtl:text-right text-xs text-slate-600">
               <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
                 <tr>
-                  <th class="py-2.5 px-3">Date</th>
-                  <th class="py-2.5 px-3">Card & Value</th>
-                  <th class="py-2.5 px-3 text-center">Qty</th>
-                  <th class="py-2.5 px-3">Department</th>
-                  <th class="py-2.5 px-3">Reason / Activity</th>
-                  <th class="py-2.5 px-3 text-center">Approval Status</th>
-                  <th class="py-2.5 px-3 text-center">Dispensation Status</th>
-                  <th class="py-2.5 px-3 text-center">Card PIN / Code</th>
+                  <th class="py-2.5 px-3" data-i18n="th_date_time">Date & Time</th>
+                  <th class="py-2.5 px-3" data-i18n="th_card_val">Card & Value</th>
+                  <th class="py-2.5 px-3 text-center" data-i18n="th_qty">Qty</th>
+                  <th class="py-2.5 px-3" data-i18n="form_dept">Department</th>
+                  <th class="py-2.5 px-3" data-i18n="th_reason_activity">Reason / Activity</th>
+                  <th class="py-2.5 px-3 text-center" data-i18n="th_approval_status">Approval Status</th>
+                  <th class="py-2.5 px-3 text-center" data-i18n="th_dispense_status">Dispensation Status</th>
+                  <th class="py-2.5 px-3 text-center" data-i18n="th_pin_code">Card PIN / Code</th>
                 </tr>
               </thead>
               <tbody id="requester-history-tbody" class="divide-y divide-slate-100">
@@ -388,11 +388,11 @@
             <div class="flex items-center gap-1.5">
               <select id="requests-status-filter" onchange="renderRequestsQueue()"
                 class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500">
-                <option value="all">All Requests</option>
-                <option value="PENDING" selected>Pending Only (Needs Action)</option>
-                <option value="APPROVED">Approved (Ready to Dispense)</option>
-                <option value="EXECUTED">Executed</option>
-                <option value="REJECTED">Rejected</option>
+                <option value="all" data-i18n="filter_req_all">All Requests</option>
+                <option value="PENDING" selected data-i18n="filter_req_pending">Pending Only (Needs Action)</option>
+                <option value="APPROVED" data-i18n="filter_req_approved">Approved (Ready to Dispense)</option>
+                <option value="EXECUTED" data-i18n="filter_req_executed">Executed</option>
+                <option value="REJECTED" data-i18n="filter_req_rejected">Rejected</option>
               </select>
               <button onclick="loadRequestsData()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition" title="Refresh">
                 <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
@@ -405,14 +405,14 @@
             <table class="w-full text-left rtl:text-right text-xs text-slate-600">
               <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
                 <tr>
-                  <th class="py-2.5 px-3">Date</th>
-                  <th class="py-2.5 px-3">Requester Staff</th>
-                  <th class="py-2.5 px-3">Department</th>
-                  <th class="py-2.5 px-3">Card Requested</th>
-                  <th class="py-2.5 px-3 text-center">Qty</th>
-                  <th class="py-2.5 px-3">Reason / Project</th>
-                  <th class="py-2.5 px-3 text-center">Status</th>
-                  <th class="py-2.5 px-3 text-center">Action</th>
+                  <th class="py-2.5 px-3" data-i18n="th_date_time">Date & Time</th>
+                  <th class="py-2.5 px-3" data-i18n="th_requester_staff">Requester Staff</th>
+                  <th class="py-2.5 px-3" data-i18n="form_dept">Department</th>
+                  <th class="py-2.5 px-3" data-i18n="th_card_requested">Card Requested</th>
+                  <th class="py-2.5 px-3 text-center" data-i18n="th_qty">Qty</th>
+                  <th class="py-2.5 px-3" data-i18n="th_reason_project">Reason / Project</th>
+                  <th class="py-2.5 px-3 text-center" data-i18n="th_status">Status</th>
+                  <th class="py-2.5 px-3 text-center" data-i18n="th_actions">Action</th>
                 </tr>
               </thead>
               <tbody id="requests-queue-tbody" class="divide-y divide-slate-100">
@@ -434,9 +434,9 @@
             <div class="flex items-center gap-2">
               <select id="trans-filter-type" onchange="loadTransactions()"
                 class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-700">
-                <option value="all">All Types</option>
-                <option value="receipt">Stock In (Receipts)</option>
-                <option value="issuance">Stock Out (Issuances)</option>
+                <option value="all" data-i18n="filter_trans_all">All Types</option>
+                <option value="receipt" data-i18n="filter_trans_receipt">Stock In (Receipts)</option>
+                <option value="issuance" data-i18n="filter_trans_issuance">Stock Out (Issuances)</option>
               </select>
               <button onclick="loadTransactions()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition" title="Refresh">
                 <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
@@ -448,14 +448,14 @@
             <table class="w-full text-left rtl:text-right text-xs text-slate-600">
               <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
                 <tr>
-                  <th class="py-2.5 px-3">Type</th>
-                  <th class="py-2.5 px-3">Card & Denom</th>
-                  <th class="py-2.5 px-3 text-center">Qty</th>
-                  <th class="py-2.5 px-3">Recipient / Supplier</th>
-                  <th class="py-2.5 px-3">Department / Reason</th>
-                  <th class="py-2.5 px-3">PIN Numbers</th>
-                  <th class="py-2.5 px-3">Handled By</th>
-                  <th class="py-2.5 px-3 font-mono">Date</th>
+                  <th class="py-2.5 px-3" data-i18n="th_type">Type</th>
+                  <th class="py-2.5 px-3" data-i18n="th_card_denom">Card & Denom</th>
+                  <th class="py-2.5 px-3 text-center" data-i18n="th_qty">Qty</th>
+                  <th class="py-2.5 px-3" data-i18n="th_recipient_supplier">Recipient / Supplier</th>
+                  <th class="py-2.5 px-3" data-i18n="th_dept_reason">Department / Reason</th>
+                  <th class="py-2.5 px-3" data-i18n="th_pin_numbers">PIN Numbers</th>
+                  <th class="py-2.5 px-3" data-i18n="th_handled_by">Handled By</th>
+                  <th class="py-2.5 px-3 font-mono" data-i18n="th_date_time">Date & Time</th>
                 </tr>
               </thead>
               <tbody id="transactions-tbody" class="divide-y divide-slate-100">
@@ -554,10 +554,10 @@
             <table class="w-full text-left rtl:text-right text-xs text-slate-600">
               <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
                 <tr>
-                  <th class="py-2.5 px-3">Date & Time</th>
-                  <th class="py-2.5 px-3">User</th>
-                  <th class="py-2.5 px-3 text-center">Action</th>
-                  <th class="py-2.5 px-3">Description</th>
+                  <th class="py-2.5 px-3" data-i18n="th_date_time">Date & Time</th>
+                  <th class="py-2.5 px-3" data-i18n="th_user">User</th>
+                  <th class="py-2.5 px-3 text-center" data-i18n="th_actions">Action</th>
+                  <th class="py-2.5 px-3" data-i18n="th_description">Description</th>
                 </tr>
               </thead>
               <tbody id="activity-log-tbody" class="divide-y divide-slate-100">
@@ -587,12 +587,12 @@
             <table class="w-full text-left rtl:text-right text-xs text-slate-600">
               <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
                 <tr>
-                  <th class="py-2.5 px-3">Full Name</th>
-                  <th class="py-2.5 px-3">Username</th>
-                  <th class="py-2.5 px-3">Department</th>
-                  <th class="py-2.5 px-3 text-center">Role / Access</th>
-                  <th class="py-2.5 px-3 text-center">Status</th>
-                  <th class="py-2.5 px-3 text-center">Actions</th>
+                  <th class="py-2.5 px-3" data-i18n="full_name">Full Name</th>
+                  <th class="py-2.5 px-3" data-i18n="profile_username">Username</th>
+                  <th class="py-2.5 px-3" data-i18n="form_dept">Department</th>
+                  <th class="py-2.5 px-3 text-center" data-i18n="user_role">Role / Access</th>
+                  <th class="py-2.5 px-3 text-center" data-i18n="th_status">Status</th>
+                  <th class="py-2.5 px-3 text-center" data-i18n="th_actions">Actions</th>
                 </tr>
               </thead>
               <tbody id="users-tbody" class="divide-y divide-slate-100">
@@ -912,7 +912,7 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="password">Initial Password</label>
-            <input type="password" id="new-user-password" required dir="ltr" placeholder="••••••••"
+            <input type="password" id="new-user-password" required dir="ltr" placeholder="••••••••" autocomplete="new-password"
               class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
           </div>
         </div>
@@ -1014,13 +1014,13 @@
 
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="current_password">Current Password</label>
-          <input type="password" id="profile-old-pass" required dir="ltr" placeholder="Current password"
+          <input type="password" id="profile-old-pass" required dir="ltr" placeholder="Current password" autocomplete="current-password"
             class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="new_password">New Password (Optional)</label>
-          <input type="password" id="profile-new-pass" dir="ltr" placeholder="Leave empty to keep current"
+          <input type="password" id="profile-new-pass" dir="ltr" placeholder="Leave empty to keep current" autocomplete="new-password"
             class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
         </div>
 
