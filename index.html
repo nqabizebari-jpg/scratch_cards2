@@ -118,6 +118,13 @@
               <option value="ar">عربي</option>
             </select>
 
+            <!-- Telegram Backup Button (Admin Only) -->
+            <button onclick="openModal('telegram-backup-modal')" id="btn-header-telegram" title="Telegram Cloud Backup"
+              class="hidden flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-bold transition">
+              <i data-lucide="send" class="w-3.5 h-3.5 text-sky-600"></i>
+              <span class="hidden md:inline" data-i18n="btn_telegram_backup">Backup</span>
+            </button>
+
             <!-- User Profile Button -->
             <button onclick="openModal('profile-modal')" title="Account Settings"
               class="flex items-center gap-1.5 p-1 sm:px-2.5 sm:py-1 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition">
@@ -384,8 +391,18 @@
               <h3 class="text-sm sm:text-base font-bold text-slate-900" data-i18n="requests_title">Card Requests Workflow</h3>
               <p class="text-xs text-slate-500 mt-0.5" data-i18n="requests_subtitle">Approver reviews staff requests; Authorized custodian dispenses cards and marks as executed.</p>
             </div>
-            <!-- Status Filter -->
-            <div class="flex items-center gap-1.5">
+            <!-- Status Filter & Actions -->
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button onclick="exportRequestsToExcel()"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 shadow-sm transition" title="Export Requests to Excel">
+                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                <span data-i18n="btn_dashboard_excel">Excel</span>
+              </button>
+              <button onclick="confirmClearRequests()" id="btn-admin-clear-requests"
+                class="hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 shadow-sm transition" title="Clear Test Requests">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                <span data-i18n="btn_clear_data">Clear</span>
+              </button>
               <select id="requests-status-filter" onchange="renderRequestsQueue()"
                 class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500">
                 <option value="all" data-i18n="filter_req_all">All Requests</option>
@@ -431,7 +448,17 @@
               <h3 class="text-sm sm:text-base font-bold text-slate-900" data-i18n="trans_title">Complete Safe Activity Log</h3>
               <p class="text-xs text-slate-500 mt-0.5" data-i18n="trans_subtitle">Full record of all card receipts, issuances, and PIN distributions.</p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button onclick="exportTransactionsToExcel()"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 shadow-sm transition" title="Export Transactions to Excel">
+                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                <span data-i18n="btn_dashboard_excel">Excel</span>
+              </button>
+              <button onclick="confirmClearTransactions()" id="btn-admin-clear-trans"
+                class="hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 shadow-sm transition" title="Clear Test Transactions History">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                <span data-i18n="btn_clear_data">Clear</span>
+              </button>
               <select id="trans-filter-type" onchange="loadTransactions()"
                 class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-700">
                 <option value="all" data-i18n="filter_trans_all">All Types</option>
@@ -456,6 +483,7 @@
                   <th class="py-2.5 px-3" data-i18n="th_pin_numbers">PIN Numbers</th>
                   <th class="py-2.5 px-3" data-i18n="th_handled_by">Handled By</th>
                   <th class="py-2.5 px-3 font-mono" data-i18n="th_date_time">Date & Time</th>
+                  <th class="py-2.5 px-3 text-center" data-i18n="th_actions">Action</th>
                 </tr>
               </thead>
               <tbody id="transactions-tbody" class="divide-y divide-slate-100">
@@ -477,6 +505,11 @@
 
             <!-- Export & Print Actions -->
             <div class="flex flex-wrap items-center gap-2">
+              <button onclick="openModal('telegram-backup-modal')" id="btn-open-backup"
+                class="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-xl text-xs font-bold border border-sky-200 transition flex items-center gap-1.5">
+                <i data-lucide="send" class="w-3.5 h-3.5 text-sky-600"></i>
+                <span data-i18n="btn_telegram_backup">Telegram Backup</span>
+              </button>
               <button onclick="openModal('reconcile-modal')" id="btn-open-reconcile"
                 class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold border border-indigo-200 transition flex items-center gap-1.5">
                 <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
@@ -1029,6 +1062,71 @@
           <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-sky-600 hover:bg-sky-700 shadow-sm transition" data-i18n="btn_save_changes">Save Changes</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- 9. TELEGRAM CLOUD BACKUP MODAL -->
+  <div id="telegram-backup-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-bold text-slate-900" data-i18n="tg_modal_title">Telegram Bot Cloud Backup</h3>
+            <p class="text-[11px] text-slate-500">Instant safe backup delivered directly to your Telegram chat</p>
+          </div>
+        </div>
+        <button onclick="closeModal('telegram-backup-modal')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Telegram Bot Token</label>
+          <input type="text" id="tg-bot-token" dir="ltr" placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+            class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono">
+          <p class="text-[10px] text-slate-400 mt-0.5">Obtained from @BotFather in Telegram.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Telegram Chat ID</label>
+          <input type="text" id="tg-chat-id" dir="ltr" placeholder="e.g. 123456789 or @channel"
+            class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono">
+          <p class="text-[10px] text-slate-400 mt-0.5">Your personal Telegram ID or Channel/Group ID.</p>
+        </div>
+
+        <div class="flex items-center justify-between pt-1">
+          <button type="button" onclick="saveTelegramSettings()"
+            class="text-xs font-bold text-sky-600 hover:text-sky-800 hover:underline">
+            Save Bot Settings
+          </button>
+          <button type="button" onclick="testTelegramBot()"
+            class="text-xs font-bold text-slate-600 hover:text-slate-800 px-3 py-1 bg-slate-100 rounded-lg hover:bg-slate-200 transition">
+            Test Ping
+          </button>
+        </div>
+      </div>
+
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1">
+        <p class="font-bold text-slate-800">Backup Contents:</p>
+        <p class="text-[11px] text-slate-500">Includes all Scratch Cards, Requests, Receipts, Issuances, and Security Audit Logs.</p>
+      </div>
+
+      <div class="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+        <button type="button" onclick="downloadLocalBackup()"
+          class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition flex items-center gap-1">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          <span>Download JSON</span>
+        </button>
+        <button type="button" onclick="sendTelegramBackup()" id="btn-send-tg-backup"
+          class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-sky-600 hover:bg-sky-700 shadow-sm transition flex items-center gap-1.5">
+          <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          <span data-i18n="btn_send_backup">Send Backup to Telegram</span>
+        </button>
+      </div>
     </div>
   </div>
 

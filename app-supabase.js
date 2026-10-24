@@ -143,7 +143,11 @@ const translations = {
     status_dispensed: 'Dispensed',
     btn_review_approve: 'Review & Approve',
     btn_dispense: 'Dispense',
-    read_only: 'Read Only'
+    read_only: 'Read Only',
+    btn_telegram_backup: 'Telegram Backup',
+    tg_modal_title: 'Telegram Bot Cloud Backup',
+    btn_send_backup: 'Send Backup to Telegram',
+    btn_clear_data: 'Clear'
   },
   ar: {
     app_title: 'نظام إدارة بطاقات الخزنة',
@@ -271,7 +275,11 @@ const translations = {
     status_dispensed: 'تم الصرف',
     btn_review_approve: 'مراجعة واعتماد',
     btn_dispense: 'صرف البطاقات',
-    read_only: 'عرض فقط'
+    read_only: 'عرض فقط',
+    btn_telegram_backup: 'نسخ احتياطي (تلغرام)',
+    tg_modal_title: 'النسخ الاحتياطي السحابي (بوت تلغرام)',
+    btn_send_backup: 'إرسال النسخة لتلغرام',
+    btn_clear_data: 'مسح'
   }
 };
 
@@ -315,7 +323,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.getElementById('login-form');
   if (loginForm) loginForm.addEventListener('submit', handleLogin);
 
-  const savedUser = localStorage.getItem('avsi_inventory_user');
+  // Clear any legacy persistent login from localStorage for high security
+  localStorage.removeItem('avsi_inventory_user');
+
+  // Check tab/browser active session only (Auto-logout on tab/browser close)
+  const savedUser = sessionStorage.getItem('avsi_inventory_user');
   if (savedUser) {
     try {
       currentUser = JSON.parse(savedUser);
@@ -431,7 +443,8 @@ async function handleLogin(e) {
       department: user.department || 'General'
     };
 
-    localStorage.setItem('avsi_inventory_user', JSON.stringify(currentUser));
+    sessionStorage.setItem('avsi_inventory_user', JSON.stringify(currentUser));
+    localStorage.removeItem('avsi_inventory_user');
     logAudit('LOGIN', `User [${user.username}] signed in.`);
 
     showAppView();
@@ -446,6 +459,7 @@ function logout() {
   realtimeChannels.forEach(ch => db.removeChannel(ch));
   realtimeChannels = [];
   currentUser = null;
+  sessionStorage.removeItem('avsi_inventory_user');
   localStorage.removeItem('avsi_inventory_user');
   showLoginView();
 }
@@ -529,6 +543,12 @@ function applyRolePermissions() {
   // ── Reconciliation: Admin AND Approver ────────────────────────────────────
   const reconcileBtn = document.getElementById('btn-open-reconcile');
   if (reconcileBtn) reconcileBtn.classList.toggle('hidden', !showInventoryActions);
+
+  // ── Admin-Only Controls: Telegram Cloud Backup, Clear Transactions, Clear Requests ──
+  document.getElementById('btn-header-telegram')?.classList.toggle('hidden', !isAdmin);
+  document.getElementById('btn-open-backup')?.classList.toggle('hidden', !isAdmin);
+  document.getElementById('btn-admin-clear-requests')?.classList.toggle('hidden', !isAdmin);
+  document.getElementById('btn-admin-clear-trans')?.classList.toggle('hidden', !isAdmin);
 
   // ── Delete card button in inventory table: Admin AND Approver ─────────────
   // (applied dynamically inside renderInventoryTable via canManageInventory flag)
@@ -893,6 +913,12 @@ function renderRequestsQueue() {
       `;
     }
 
+    const deleteBtn = isAdmin ? `
+      <button onclick="deleteCardRequest(${r.id})" class="p-1 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition" title="Delete Request">
+        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+      </button>
+    ` : '';
+
     return `
       <tr class="hover:bg-slate-50 transition">
         <td class="py-2.5 px-3 font-mono text-[11px] text-slate-600">${formatDateTime(r.created_at)}</td>
@@ -902,7 +928,12 @@ function renderRequestsQueue() {
         <td class="py-2.5 px-3 text-center font-extrabold text-sky-600">${r.quantity}</td>
         <td class="py-2.5 px-3 text-slate-600 text-xs">${r.reason}</td>
         <td class="py-2.5 px-3 text-center">${statusBadge}</td>
-        <td class="py-2.5 px-3 text-center">${actionBtn}</td>
+        <td class="py-2.5 px-3 text-center">
+          <div class="inline-flex items-center justify-center gap-1.5">
+            ${actionBtn}
+            ${deleteBtn}
+          </div>
+        </td>
       </tr>
     `;
   }).join('');
@@ -1281,7 +1312,7 @@ async function handleUpdateProfile(e) {
     await db.from('users').update(updates).eq('id', currentUser.id);
 
     currentUser.fullName = fullName;
-    localStorage.setItem('avsi_inventory_user', JSON.stringify(currentUser));
+    sessionStorage.setItem('avsi_inventory_user', JSON.stringify(currentUser));
     document.getElementById('user-display-name').textContent = fullName;
     document.getElementById('user-avatar').textContent = fullName.charAt(0);
 
@@ -1309,6 +1340,7 @@ async function loadTransactions() {
     let list = [];
     if (typeFilter !== 'issuance' && recRes.data) {
       recRes.data.forEach(r => list.push({
+        id: r.id,
         type: 'STOCK_IN',
         card: `${r.card_types?.provider} ${r.card_types?.denomination?.toLocaleString()}`,
         qty: r.quantity,
@@ -1322,6 +1354,7 @@ async function loadTransactions() {
 
     if (typeFilter !== 'receipt' && issRes.data) {
       issRes.data.forEach(i => list.push({
+        id: i.id,
         type: 'DISPENSED',
         card: `${i.card_types?.provider} ${i.card_types?.denomination?.toLocaleString()}`,
         qty: i.quantity,
@@ -1333,11 +1366,15 @@ async function loadTransactions() {
       }));
     }
 
+    currentTransactionsList = list;
+
     if (list.length === 0) {
       const emptyMsg = (translations[currentLang] || translations.en).no_transactions || 'No transactions recorded.';
-      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400 font-medium">${emptyMsg}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-400 font-medium">${emptyMsg}</td></tr>`;
       return;
     }
+
+    const isAdmin = currentUser?.role === 'admin';
 
     tbody.innerHTML = list.map(item => `
       <tr class="hover:bg-slate-50 transition">
@@ -1353,6 +1390,13 @@ async function loadTransactions() {
         <td class="py-2.5 px-3 font-mono text-xs text-slate-600">${item.pin}</td>
         <td class="py-2.5 px-3 text-slate-700">${item.handler}</td>
         <td class="py-2.5 px-3 font-mono text-[11px] text-slate-600">${formatDateTime(item.date)}</td>
+        <td class="py-2.5 px-3 text-center">
+          ${isAdmin ? `
+            <button onclick="deleteSingleTransaction('${item.type}', ${item.id})" class="p-1 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition" title="Delete Entry">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          ` : '<span class="text-slate-300 text-[10px]">—</span>'}
+        </td>
       </tr>
     `).join('');
 
@@ -1466,9 +1510,14 @@ function setAuditPreset(preset) {
   generateReport(true);
 }
 
-// Exports
+// ==================== EXCEL EXPORTS (AVSI OFFICIAL BRANDING) ====================
 function exportDashboardToExcel() {
   const rows = [
+    ['AVSI Organization - Scratch Card Inventory System'],
+    ['Report:', 'Current Safe Stock Inventory Overview'],
+    ['Exported At:', new Date().toLocaleString()],
+    ['Total Types:', cardTypes.length],
+    [],
     ['Provider', 'Denomination (IQD)', 'Category', 'Available Stock', 'Min Alert', 'Expiry Date', 'Total Value (IQD)']
   ];
 
@@ -1479,7 +1528,7 @@ function exportDashboardToExcel() {
       c.category,
       c.current_stock,
       c.min_stock_alert,
-      c.expiry_date || '',
+      c.expiry_date || '-',
       c.total_face_value
     ]);
   });
@@ -1487,22 +1536,327 @@ function exportDashboardToExcel() {
   if (window.XLSX) {
     const ws = XLSX.utils.aoa_to_sheet(rows);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'AVSI_Inventory');
-    XLSX.writeFile(wb, `avsi_scratch_cards_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, 'Safe_Inventory');
+    XLSX.writeFile(wb, `AVSI_Safe_Inventory_${new Date().toISOString().split('T')[0]}.xlsx`);
+    showToast('Inventory exported to Excel!', 'success');
+  }
+}
+
+function exportRequestsToExcel() {
+  if (!allRequests || allRequests.length === 0) {
+    showToast('No requests available to export.', 'info');
+    return;
+  }
+  const rows = [
+    ['AVSI Organization - Scratch Card Inventory System'],
+    ['Report:', 'Card Requests Workflow & Status Queue'],
+    ['Exported At:', new Date().toLocaleString()],
+    ['Total Records:', allRequests.length],
+    [],
+    ['Date & Time', 'Requester Staff', 'Department', 'Card Provider & Value', 'Quantity', 'Purpose / Activity', 'Status', 'Dispensed PINs', 'Approved By', 'Executed By']
+  ];
+
+  allRequests.forEach(r => {
+    rows.push([
+      new Date(r.created_at).toLocaleString(),
+      r.requester_name || '-',
+      r.department || '-',
+      `${r.card_types?.provider || ''} ${r.card_types?.denomination?.toLocaleString() || ''} IQD`,
+      r.quantity,
+      r.reason || '-',
+      r.status,
+      r.pin_numbers || '-',
+      r.approved_by || '-',
+      r.executed_by || '-'
+    ]);
+  });
+
+  if (window.XLSX) {
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Card_Requests');
+    XLSX.writeFile(wb, `AVSI_Card_Requests_${new Date().toISOString().split('T')[0]}.xlsx`);
+    showToast('Card requests exported to Excel!', 'success');
+  }
+}
+
+let currentTransactionsList = [];
+
+function exportTransactionsToExcel() {
+  if (!currentTransactionsList || currentTransactionsList.length === 0) {
+    showToast('No transactions available to export.', 'info');
+    return;
+  }
+  const rows = [
+    ['AVSI Organization - Scratch Card Inventory System'],
+    ['Report:', 'Complete Safe Transactions Activity Log (Stock In & Out)'],
+    ['Exported At:', new Date().toLocaleString()],
+    ['Total Transactions:', currentTransactionsList.length],
+    [],
+    ['Date & Time', 'Transaction Type', 'Card & Value', 'Quantity', 'Recipient / Supplier', 'Department / Reason', 'PIN Numbers', 'Handled By']
+  ];
+
+  currentTransactionsList.forEach(t => {
+    rows.push([
+      new Date(t.date).toLocaleString(),
+      t.type === 'STOCK_IN' ? 'Stock In (Receipt)' : 'Dispensed (Issuance)',
+      t.card,
+      t.qty,
+      t.party,
+      t.detail,
+      t.pin || '-',
+      t.handler || '-'
+    ]);
+  });
+
+  if (window.XLSX) {
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Safe_Transactions');
+    XLSX.writeFile(wb, `AVSI_Safe_Transactions_${new Date().toISOString().split('T')[0]}.xlsx`);
+    showToast('Transactions exported to Excel!', 'success');
   }
 }
 
 function exportReportToCSV() {
   if (currentReportData.length === 0) return;
-  const rows = [['Card Type', 'Denomination', 'Opening', 'Received (+)', 'Issued (-)', 'Closing', 'Total Value (IQD)']];
+  const rows = [
+    ['AVSI Organization - Scratch Card Inventory System'],
+    ['Report:', 'Periodic Physical Stock Reconciliation & Valuation'],
+    ['Exported At:', new Date().toLocaleString()],
+    [],
+    ['Card Type', 'Denomination', 'Opening', 'Received (+)', 'Issued (-)', 'Closing', 'Total Value (IQD)']
+  ];
   currentReportData.forEach(r => rows.push([r.cardName, r.denom, r.opening, r.received, r.issued, r.closing, r.totalVal]));
-  const csvContent = 'data:text/csv;charset=utf-8,' + rows.map(e => e.join(',')).join('\n');
-  const link = document.createElement('a');
-  link.setAttribute('href', encodeURI(csvContent));
-  link.setAttribute('download', `avsi_audit_${new Date().toISOString().split('T')[0]}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+
+  if (window.XLSX) {
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Audit_Report');
+    XLSX.writeFile(wb, `AVSI_Safe_Audit_${new Date().toISOString().split('T')[0]}.xlsx`);
+  } else {
+    const csvContent = 'data:text/csv;charset=utf-8,' + rows.map(e => e.join(',')).join('\n');
+    const link = document.createElement('a');
+    link.setAttribute('href', encodeURI(csvContent));
+    link.setAttribute('download', `AVSI_Safe_Audit_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+}
+
+// ==================== TRANSACTION & REQUEST DELETION (ADMIN ONLY) ====================
+async function deleteCardRequest(requestId) {
+  if (!confirm('Are you sure you want to permanently delete this card request?')) return;
+  try {
+    const { error } = await db.from('card_requests').delete().eq('id', requestId);
+    if (error) throw error;
+    logAudit('DELETE_REQUEST', `Admin deleted request #${requestId}.`);
+    showToast('Request deleted successfully.', 'success');
+    loadRequestsData();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function deleteSingleTransaction(type, id) {
+  if (!confirm('Are you sure you want to permanently delete this transaction record?')) return;
+  try {
+    const table = type === 'STOCK_IN' ? 'receipts' : 'issuances';
+    const { error } = await db.from(table).delete().eq('id', id);
+    if (error) throw error;
+    logAudit('DELETE_TRANSACTION', `Admin deleted ${type} transaction #${id}.`);
+    showToast('Transaction record deleted successfully.', 'success');
+    loadTransactions();
+    loadDashboardData();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function confirmClearTransactions() {
+  if (!confirm('CAUTION: Are you sure you want to permanently delete ALL transaction history (Receipts and Issuances)? This will clear all test records.')) return;
+  try {
+    const [d1, d2] = await Promise.all([
+      db.from('receipts').delete().neq('id', 0),
+      db.from('issuances').delete().neq('id', 0)
+    ]);
+    if (d1.error) throw d1.error;
+    if (d2.error) throw d2.error;
+    logAudit('CLEAR_ALL_TRANSACTIONS', 'Admin cleared all transaction history (receipts and issuances).');
+    showToast('All transaction records cleared successfully.', 'success');
+    loadTransactions();
+    loadDashboardData();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function confirmClearRequests() {
+  if (!confirm('CAUTION: Are you sure you want to permanently delete ALL card requests? This will clear all test requests.')) return;
+  try {
+    const { error } = await db.from('card_requests').delete().neq('id', 0);
+    if (error) throw error;
+    logAudit('CLEAR_ALL_REQUESTS', 'Admin cleared all card requests.');
+    showToast('All card requests cleared successfully.', 'success');
+    loadRequestsData();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+// ==================== TELEGRAM BOT CLOUD BACKUP ====================
+function loadTelegramSettings() {
+  const token = localStorage.getItem('avsi_tg_bot_token') || '';
+  const chatId = localStorage.getItem('avsi_tg_chat_id') || '';
+  const tokenEl = document.getElementById('tg-bot-token');
+  const chatEl = document.getElementById('tg-chat-id');
+  if (tokenEl) tokenEl.value = token;
+  if (chatEl) chatEl.value = chatId;
+}
+
+function saveTelegramSettings() {
+  const token = document.getElementById('tg-bot-token')?.value.trim();
+  const chatId = document.getElementById('tg-chat-id')?.value.trim();
+  if (!token || !chatId) {
+    showToast('Please enter both Bot Token and Chat ID', 'error');
+    return;
+  }
+  localStorage.setItem('avsi_tg_bot_token', token);
+  localStorage.setItem('avsi_tg_chat_id', chatId);
+  showToast('Telegram bot credentials saved successfully!', 'success');
+}
+
+async function testTelegramBot() {
+  const token = document.getElementById('tg-bot-token')?.value.trim() || localStorage.getItem('avsi_tg_bot_token');
+  const chatId = document.getElementById('tg-chat-id')?.value.trim() || localStorage.getItem('avsi_tg_chat_id');
+  if (!token || !chatId) {
+    showToast('Please enter Telegram Bot Token and Chat ID first', 'error');
+    return;
+  }
+
+  try {
+    showToast('Sending test message to Telegram...', 'info');
+    const msg = `🔔 *AVSI Scratch Card Inventory*\n✅ Telegram Bot connected successfully!\n🕒 Time: ${new Date().toLocaleString()}\n👤 Admin: ${currentUser?.fullName || 'Alind'}`;
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: 'Markdown' })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('Telegram ping sent successfully! Check your Telegram chat.', 'success');
+    } else {
+      throw new Error(data.description || 'Failed to send message');
+    }
+  } catch (err) {
+    showToast(`Telegram Error: ${err.message}`, 'error');
+  }
+}
+
+async function sendTelegramBackup() {
+  const token = document.getElementById('tg-bot-token')?.value.trim() || localStorage.getItem('avsi_tg_bot_token');
+  const chatId = document.getElementById('tg-chat-id')?.value.trim() || localStorage.getItem('avsi_tg_chat_id');
+  if (!token || !chatId) {
+    showToast('Please configure Telegram Bot Token and Chat ID first.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-send-tg-backup');
+  if (btn) btn.disabled = true;
+
+  try {
+    showToast('Compiling safe database backup...', 'info');
+
+    const [cardsRes, reqsRes, recsRes, issRes, logsRes, usersRes] = await Promise.all([
+      db.from('card_types').select('*'),
+      db.from('card_requests').select('*'),
+      db.from('receipts').select('*'),
+      db.from('issuances').select('*'),
+      db.from('audit_logs').select('*'),
+      db.from('users').select('id, full_name, username, role, department, is_active, created_at')
+    ]);
+
+    const backupData = {
+      system: 'AVSI Scratch Card Safe Inventory System',
+      exported_at: new Date().toISOString(),
+      exported_by: currentUser?.fullName || 'Admin',
+      statistics: {
+        total_card_types: cardsRes.data ? cardsRes.data.length : 0,
+        total_requests: reqsRes.data ? reqsRes.data.length : 0,
+        total_receipts: recsRes.data ? recsRes.data.length : 0,
+        total_issuances: issRes.data ? issRes.data.length : 0,
+        total_audit_logs: logsRes.data ? logsRes.data.length : 0
+      },
+      card_types: cardsRes.data || [],
+      card_requests: reqsRes.data || [],
+      receipts: recsRes.data || [],
+      issuances: issRes.data || [],
+      audit_logs: logsRes.data || [],
+      users: usersRes.data || []
+    };
+
+    const jsonStr = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const filename = `AVSI_Safe_Backup_${new Date().toISOString().split('T')[0]}_${Date.now()}.json`;
+
+    const formData = new FormData();
+    formData.append('chat_id', chatId);
+    formData.append('caption', `📦 *AVSI Scratch Card Inventory - Full Database Backup*\n📅 Date: ${new Date().toLocaleString()}\n👤 Admin: ${currentUser?.fullName || 'Alind'}\n💳 Cards: ${cardsRes.data?.length || 0} | 📥 Receipts: ${recsRes.data?.length || 0} | 📤 Issuances: ${issRes.data?.length || 0}`);
+    formData.append('parse_mode', 'Markdown');
+    formData.append('document', blob, filename);
+
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await res.json();
+    if (data.ok) {
+      logAudit('TELEGRAM_BACKUP', `Admin sent complete database backup to Telegram chat [${chatId}].`);
+      showToast('Full safe backup delivered to Telegram successfully!', 'success');
+      closeModal('telegram-backup-modal');
+    } else {
+      throw new Error(data.description || 'Telegram failed to accept document');
+    }
+  } catch (err) {
+    showToast(`Backup Error: ${err.message}`, 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function downloadLocalBackup() {
+  try {
+    const [cardsRes, reqsRes, recsRes, issRes, logsRes] = await Promise.all([
+      db.from('card_types').select('*'),
+      db.from('card_requests').select('*'),
+      db.from('receipts').select('*'),
+      db.from('issuances').select('*'),
+      db.from('audit_logs').select('*')
+    ]);
+
+    const backupData = {
+      system: 'AVSI Scratch Card Safe Inventory System',
+      exported_at: new Date().toISOString(),
+      card_types: cardsRes.data || [],
+      card_requests: reqsRes.data || [],
+      receipts: recsRes.data || [],
+      issuances: issRes.data || [],
+      audit_logs: logsRes.data || []
+    };
+
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `AVSI_Safe_Backup_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('Local JSON backup downloaded.', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
 }
 
 function logAudit(action, description) {
@@ -1583,6 +1937,9 @@ function openModal(modalId) {
       document.getElementById('profile-full-name').value = currentUser.fullName || '';
       document.getElementById('profile-old-pass').value = '';
       document.getElementById('profile-new-pass').value = '';
+    }
+    if (modalId === 'telegram-backup-modal') {
+      loadTelegramSettings();
     }
     refreshIcons();
   }
