@@ -1107,6 +1107,39 @@ async function handleAddNewCardType(e) {
   const pin = document.getElementById('new-card-pin').value.trim() || null;
 
   try {
+    // Check if card type already exists (even if inactive)
+    console.log('[AddCardType] Checking for:', { provider, denomination, category });
+    const { data: existing, error: checkErr } = await db.from('card_types')
+      .select('id, is_active')
+      .eq('provider', provider)
+      .eq('denomination', denomination)
+      .eq('category', category)
+      .maybeSingle();
+    console.log('[AddCardType] Existing record:', existing, 'Error:', checkErr);
+
+    if (existing) {
+      if (!existing.is_active) {
+        // Reactivate the old record instead of inserting a duplicate
+        const { error: updateErr } = await db.from('card_types').update({
+          is_active: true,
+          min_stock_alert: minStockAlert,
+          unit_cost: unitCost,
+          expiry_date: expiryDate,
+          pin_number: pin
+        }).eq('id', existing.id);
+        if (updateErr) throw updateErr;
+        logAudit('CARD_TYPE_REACTIVATED', `Reactivated card type [${provider} ${denomination} ${category}].`);
+        closeModal('new-card-modal');
+        showToast(currentLang === 'ar' ? 'تم إعادة تفعيل الفئة بنجاح!' : currentLang === 'ku' ? 'جۆرێ کارتی دووبارە چالاکبوو!' : 'Card type reactivated successfully!', 'success');
+        loadDashboardData();
+        return;
+      } else {
+        // Active duplicate — show friendly error
+        showToast(currentLang === 'ar' ? 'هذه الفئة مسجلة مسبقاً بنفس الشركة والقيمة والنوع!' : currentLang === 'ku' ? 'ئەم جۆرە کارتە پێشتر تۆمارکراوە بە هەمان کۆمپانیا، بها، و جۆر!' : 'This card type already exists with the same provider, denomination, and category!', 'error');
+        return;
+      }
+    }
+
     const { error } = await db.from('card_types').insert({
       provider,
       denomination,
@@ -1120,13 +1153,13 @@ async function handleAddNewCardType(e) {
 
     if (error) throw error;
 
-    logAudit('NEW_CARD_TYPE', `Added card type [${provider} ${denomination}].`);
+    logAudit('NEW_CARD_TYPE', `Added card type [${provider} ${denomination} ${category}].`);
     closeModal('new-card-modal');
-    showToast('New card type registered successfully!', 'success');
+    showToast(currentLang === 'ar' ? 'تمت إضافة الفئة بنجاح!' : currentLang === 'ku' ? 'جۆرێ کارتی نوێ زیادکرا!' : 'New card type registered successfully!', 'success');
     loadDashboardData();
   } catch (err) {
     if (err.code === '23505' || err.status === 409 || (err.message && err.message.toLowerCase().includes('duplicate'))) {
-      showToast(currentLang === 'ar' ? 'هذه الفئة مسجلة مسبقاً بنفس الشركة والقيمة والنوع!' : 'This card type already exists with the same provider, denomination, and category!', 'error');
+      showToast(currentLang === 'ar' ? 'هذه الفئة مسجلة مسبقاً بنفس الشركة والقيمة والنوع!' : currentLang === 'ku' ? 'ئەم جۆرە کارتە پێشتر تۆمارکراوە!' : 'This card type already exists!', 'error');
     } else {
       showToast(err.message, 'error');
     }
