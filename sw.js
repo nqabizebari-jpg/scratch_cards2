@@ -1,8 +1,8 @@
-const CACHE_NAME = 'safecards-pwa-v1';
+const CACHE_NAME = 'safecards-pwa-v2';
 const ASSETS = [
   './',
   './index.html',
-  './app-supabase.js',
+  './app-supabase.js?v=2.1',
   './styles.css',
   './manifest.json'
 ];
