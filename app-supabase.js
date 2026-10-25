@@ -393,6 +393,7 @@ function applyLanguage(lang) {
 
   if (currentUser?.role === 'requester') {
     loadRequesterHistory();
+    populateCardSelects();
   } else {
     renderInventoryTable();
     populateCardSelects();
@@ -583,8 +584,6 @@ function setupRealtime() {
 
 // ==================== DASHBOARD & INVENTORY ====================
 async function loadDashboardData() {
-  if (currentUser?.role === 'requester') return;
-
   try {
     const { data: cards, error } = await db
       .from('card_types')
@@ -617,6 +616,12 @@ async function loadDashboardData() {
         expiry_status: expiryStatus
       };
     });
+
+    // Always populate selects (so staff requesters have card options in their request modal)
+    populateCardSelects();
+
+    // If requester, exit early so we don't calculate or render manager/admin dashboard UI
+    if (currentUser?.role === 'requester') return;
 
     let totalCards = 0;
     let totalFaceValue = 0;
@@ -752,6 +757,12 @@ function populateCardSelects() {
     const el = document.getElementById(selId);
     if (!el) return;
     const curVal = el.value;
+
+    if (!cardTypes || cardTypes.length === 0) {
+      el.innerHTML = `<option value="">${currentLang === 'ar' ? '-- لا توجد بطاقات متاحة حالياً --' : currentLang === 'ku' ? '-- چ کارت بەردەست نینن --' : '-- No cards available --'}</option>`;
+      return;
+    }
+
     el.innerHTML = cardTypes.map(c => `
       <option value="${c.id}">${c.provider} - ${c.denomination.toLocaleString()} IQD (${c.category}) [Available: ${c.current_stock}]</option>
     `).join('');
@@ -775,6 +786,11 @@ async function handleStaffRequestSubmit(e) {
   const quantity = parseInt(document.getElementById('request-quantity').value, 10);
   const department = document.getElementById('request-dept').value;
   const reason = document.getElementById('request-reason').value.trim();
+
+  if (!cardTypeId || isNaN(cardTypeId)) {
+    showToast(currentLang === 'ar' ? 'يرجى اختيار نوع البطاقة والفئة المطلوبة.' : currentLang === 'ku' ? 'تکایە جۆرێ کارتی هەڵبژێرە.' : 'Please select a valid card type.', 'warning');
+    return;
+  }
 
   try {
     const { error } = await db.from('card_requests').insert({
@@ -1966,6 +1982,13 @@ function openModal(modalId) {
   const m = document.getElementById(modalId);
   if (m) {
     m.classList.remove('hidden');
+    if (modalId === 'staff-request-modal') {
+      if (!cardTypes || cardTypes.length === 0) {
+        loadDashboardData();
+      } else {
+        populateCardSelects();
+      }
+    }
     if (modalId === 'profile-modal' && currentUser) {
       document.getElementById('profile-full-name').value = currentUser.fullName || '';
       document.getElementById('profile-old-pass').value = '';
