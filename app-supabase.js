@@ -788,13 +788,13 @@ async function sendRequestEmailNotification({ requesterName, department, cardNam
     formData.append('access_key', WEB3FORMS_ACCESS_KEY);
     formData.append('subject', `🔔 طلب بطاقة جديد: [${requesterName}] - [${department}]`);
     formData.append('from_name', 'AVSI Scratch Card Inventory');
-    formData.append('الموظف طالب الكرت (Requester)', requesterName);
-    formData.append('القسم (Department)', department);
-    formData.append('نوع وفئة الكرت (Card)', cardName);
-    formData.append('الكمية المطلوبة (Quantity)', `${quantity} كروت`);
-    formData.append('السبب أو النشاط (Purpose)', reason);
-    formData.append('تاريخ ووقت الطلب', new Date().toLocaleString());
-    formData.append('رابط المنظومة للرد والاعتماد', 'https://nqabizebari-jpg.github.io/scratch_cards2/');
+    formData.append('Requester Staff', requesterName);
+    formData.append('Department', department);
+    formData.append('Card Requested', cardName);
+    formData.append('Quantity', `${quantity} Card(s)`);
+    formData.append('Purpose / Activity', reason);
+    formData.append('Request Date & Time', new Date().toLocaleString());
+    formData.append('Approval Portal', 'https://nqabizebari-jpg.github.io/scratch_cards2/');
 
     const res = await fetch('https://api.web3forms.com/submit', {
       method: 'POST',
