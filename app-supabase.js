@@ -14,8 +14,6 @@ let cardTypes = [];
 let allRequests = [];
 let realtimeChannels = [];
 let currentReportData = [];
-let soundNotificationEnabled = localStorage.getItem('avsi_sound_enabled') !== 'false'; // default ON
-let audioCtx = null;
 
 // ==================== I18N TRANSLATIONS (EN & AR) ====================
 const translations = {
@@ -149,15 +147,7 @@ const translations = {
     btn_telegram_backup: 'Telegram Backup',
     tg_modal_title: 'Telegram Bot Cloud Backup',
     btn_send_backup: 'Send Backup to Telegram',
-    btn_clear_data: 'Clear',
-    notification_sound_on: 'Sound ON',
-    notification_sound_off: 'Sound Muted',
-    notify_new_request_title: 'New Card Request Submitted',
-    notify_new_request_body: 'A staff member has submitted a new card request needing review.',
-    notify_approved_title: 'Request Approved - Ready to Dispense',
-    notify_approved_body: 'A card request was approved and is waiting for cards to be dispensed.',
-    notify_executed_title: 'Cards Dispensed & Ready',
-    notify_executed_body: 'Your card request has been fulfilled. Check your portal for details/PIN.'
+    btn_clear_data: 'Clear'
   },
   ar: {
     app_title: 'نظام إدارة بطاقات الخزنة',
@@ -289,15 +279,7 @@ const translations = {
     btn_telegram_backup: 'نسخ احتياطي (تلغرام)',
     tg_modal_title: 'النسخ الاحتياطي السحابي (بوت تلغرام)',
     btn_send_backup: 'إرسال النسخة لتلغرام',
-    btn_clear_data: 'مسح',
-    notification_sound_on: 'الصوت مفعّل',
-    notification_sound_off: 'الصوت مكتوم',
-    notify_new_request_title: 'طلب بطاقات جديد',
-    notify_new_request_body: 'قام أحد الموظفين بتقديم طلب بطاقات جديد يحتاج المراجعة والاعتماد.',
-    notify_approved_title: 'تم اعتماد الطلب - جاهز للصرف',
-    notify_approved_body: 'تمت الموافقة على طلب بطاقات وهو بانتظار الصرف الفعلي والتسليم.',
-    notify_executed_title: 'تم صرف البطاقات وتسليمها',
-    notify_executed_body: 'تم تنفيذ طلب البطاقات الخاص بك وصرفه بنجاح. يمكنك الاطلاع على أرقام الـ PIN.'
+    btn_clear_data: 'مسح'
   }
 };
 
@@ -313,178 +295,6 @@ async function hashPassword(str) {
 function t(key, fallback = '') {
   const dict = translations[currentLang] || translations.en;
   return dict[key] !== undefined ? dict[key] : fallback;
-}
-
-// ==================== NOTIFICATIONS & SOUND CHIME ====================
-function initAudioContext() {
-  if (!audioCtx) {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (AudioContextClass) {
-      audioCtx = new AudioContextClass();
-    }
-  }
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
-}
-
-// Play pleasant two-tone chime (880Hz -> 1320Hz or 587Hz -> 880Hz)
-function playNotificationChime(toneType = 'chime') {
-  if (!soundNotificationEnabled) return;
-  try {
-    initAudioContext();
-    if (!audioCtx) return;
-
-    const now = audioCtx.currentTime;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-
-    osc.type = 'sine';
-
-    if (toneType === 'action_needed') {
-      // Approver/Executor chime: bright two-tone (A5 880Hz -> C#6 1108Hz -> E6 1320Hz)
-      osc.frequency.setValueAtTime(880, now);
-      osc.frequency.setValueAtTime(1108, now + 0.12);
-      osc.frequency.setValueAtTime(1320, now + 0.24);
-
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.28, now + 0.04);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start(now);
-      osc.stop(now + 0.7);
-    } else {
-      // Standard pleasant bell chime (D5 587Hz -> A5 880Hz)
-      osc.frequency.setValueAtTime(587.33, now);
-      osc.frequency.setValueAtTime(880, now + 0.15);
-
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.25, now + 0.04);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start(now);
-      osc.stop(now + 0.6);
-    }
-  } catch (err) {
-    console.warn('Audio chime notice:', err);
-  }
-}
-
-function updateNotificationUI() {
-  const icon = document.getElementById('icon-notification-sound');
-  const label = document.getElementById('label-notification-sound');
-  const btn = document.getElementById('btn-notification-toggle');
-  if (!btn) return;
-
-  const onText = t('notification_sound_on', 'Sound ON');
-  const offText = t('notification_sound_off', 'Sound Muted');
-
-  if (soundNotificationEnabled) {
-    if (label) label.textContent = onText;
-    btn.className = 'flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-bold transition';
-    if (icon) {
-      icon.setAttribute('data-lucide', 'bell');
-      icon.className = 'w-3.5 h-3.5 text-sky-600';
-    }
-  } else {
-    if (label) label.textContent = offText;
-    btn.className = 'flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 border border-slate-200 text-xs font-semibold transition';
-    if (icon) {
-      icon.setAttribute('data-lucide', 'bell-off');
-      icon.className = 'w-3.5 h-3.5 text-slate-400';
-    }
-  }
-  refreshIcons();
-}
-
-function toggleNotificationSound() {
-  initAudioContext();
-  soundNotificationEnabled = !soundNotificationEnabled;
-  localStorage.setItem('avsi_sound_enabled', soundNotificationEnabled ? 'true' : 'false');
-  updateNotificationUI();
-
-  if (soundNotificationEnabled) {
-    playNotificationChime('action_needed');
-    showToast(currentLang === 'ar' ? 'تم تفعيل التنبيهات الصوتية بنجاح 🔔' : 'Notification sounds enabled! 🔔', 'success');
-    requestSystemNotificationPermission();
-  } else {
-    showToast(currentLang === 'ar' ? 'تم كتم التنبيهات الصوتية 🔕' : 'Notification sounds muted.', 'info');
-  }
-}
-
-function requestSystemNotificationPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission().catch(console.warn);
-  }
-}
-
-function triggerSystemNotification(title, body) {
-  if ('Notification' in window && Notification.permission === 'granted') {
-    try {
-      new Notification(title, {
-        body,
-        icon: 'avsi_logo.png',
-        badge: 'avsi_logo.png',
-        tag: 'avsi-card-request'
-      });
-    } catch (e) {
-      console.warn('System notification error:', e);
-    }
-  }
-}
-
-// Centralized dispatcher for real-time card request events
-function handleCardRequestNotification(payload) {
-  if (!currentUser) return;
-  const newRow = payload.new;
-  const oldRow = payload.old;
-  const eventType = payload.eventType; // 'INSERT', 'UPDATE'
-
-  const role = currentUser.role; // 'admin', 'approver', 'requester', 'manager'
-  const isApprover = role === 'approver';
-  const isAdmin = role === 'admin';
-  const isRequester = role === 'requester';
-
-  // 1. NEW REQUEST SUBMITTED (Status: PENDING) -> Alert Approver (Yahia) & Admin (Alind)
-  if (eventType === 'INSERT' && newRow?.status === 'PENDING') {
-    // If the person logged in is the one who just submitted, no need to beep themselves
-    if (newRow.requester_id === currentUser.id) return;
-
-    if (isApprover || isAdmin) {
-      playNotificationChime('action_needed');
-      const title = t('notify_new_request_title', 'New Card Request Submitted');
-      const body = `${newRow.requester_name} (${newRow.department || 'Staff'}) requested ${newRow.quantity} card(s).`;
-
-      showToast(`🔔 ${title}: ${body}`, 'info');
-      triggerSystemNotification(title, body);
-    }
-  }
-
-  // 2. REQUEST APPROVED (Status changed from PENDING to APPROVED) -> Alert Executor (Alind Admin)
-  if (eventType === 'UPDATE' && newRow?.status === 'APPROVED' && oldRow?.status === 'PENDING') {
-    if (isAdmin) {
-      playNotificationChime('action_needed');
-      const title = t('notify_approved_title', 'Request Approved - Ready to Dispense');
-      const body = `Request #${newRow.id} for ${newRow.requester_name} was approved. Ready to dispense.`;
-
-      showToast(`✅ ${title}: ${body}`, 'success');
-      triggerSystemNotification(title, body);
-    }
-  }
-
-  // 3. REQUEST EXECUTED (Status changed to EXECUTED) -> Alert the Requester who submitted it
-  if (eventType === 'UPDATE' && newRow?.status === 'EXECUTED' && oldRow?.status !== 'EXECUTED') {
-    if (isRequester && newRow.requester_id === currentUser.id) {
-      playNotificationChime('chime');
-      const title = t('notify_executed_title', 'Cards Dispensed & Ready');
-      const body = `Your request for ${newRow.quantity} card(s) was dispensed. Check your portal for PIN codes.`;
-
-      showToast(`🎉 ${title}!`, 'success');
-      triggerSystemNotification(title, body);
-    }
-  }
 }
 
 // Service worker registration for PWA
@@ -590,7 +400,6 @@ function applyLanguage(lang) {
     renderRequestsQueue();
     loadTransactions();
   }
-  updateNotificationUI();
   refreshIcons();
 }
 
@@ -682,9 +491,6 @@ function showAppView() {
   // Apply Role-Based Layout Permissions
   applyRolePermissions();
 
-  updateNotificationUI();
-  requestSystemNotificationPermission();
-
   setupRealtime();
   loadDashboardData();
   loadRequestsData();
@@ -759,8 +565,7 @@ function setupRealtime() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'card_types' }, () => {
       loadDashboardData();
     })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'card_requests' }, (payload) => {
-      handleCardRequestNotification(payload);
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'card_requests' }, () => {
       loadRequestsData();
       if (currentUser?.role === 'requester') loadRequesterHistory();
     })
@@ -974,6 +779,37 @@ function updateReconcileCurrentStock() {
   inp.value = card ? card.current_stock : 0;
 }
 
+// ==================== EMAIL NOTIFICATION (WEB3FORMS) ====================
+const WEB3FORMS_ACCESS_KEY = '7b390f4e-3784-4afd-9b80-bf05a1872f04';
+
+async function sendRequestEmailNotification({ requesterName, department, cardName, quantity, reason }) {
+  try {
+    const formData = new FormData();
+    formData.append('access_key', WEB3FORMS_ACCESS_KEY);
+    formData.append('subject', `🔔 طلب بطاقة جديد: [${requesterName}] - [${department}]`);
+    formData.append('from_name', 'AVSI Scratch Card Inventory');
+    formData.append('الموظف طالب الكرت (Requester)', requesterName);
+    formData.append('القسم (Department)', department);
+    formData.append('نوع وفئة الكرت (Card)', cardName);
+    formData.append('الكمية المطلوبة (Quantity)', `${quantity} كروت`);
+    formData.append('السبب أو النشاط (Purpose)', reason);
+    formData.append('تاريخ ووقت الطلب', new Date().toLocaleString());
+    formData.append('رابط المنظومة للرد والاعتماد', 'https://nqabizebari-jpg.github.io/scratch_cards2/');
+
+    const res = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (data.success) {
+      console.log('[Email Notification] Alert sent successfully via Web3Forms');
+    }
+  } catch (err) {
+    console.warn('[Email Notification] Could not send email alert:', err);
+  }
+}
+
 // ==================== REQUESTS WORKFLOW (STAFF, YAHIA, ALIND) ====================
 async function handleStaffRequestSubmit(e) {
   e.preventDefault();
@@ -1000,9 +836,20 @@ async function handleStaffRequestSubmit(e) {
 
     if (error) throw error;
 
+    // Send instant email notification to Outlook
+    const card = cardTypes.find(c => c.id === cardTypeId);
+    const cardDesc = card ? `${card.provider} - ${card.denomination.toLocaleString()} IQD (${card.category})` : `Card #${cardTypeId}`;
+    sendRequestEmailNotification({
+      requesterName: currentUser.fullName,
+      department,
+      cardName: cardDesc,
+      quantity,
+      reason
+    });
+
     logAudit('CARD_REQUEST_SUBMIT', `Staff [${currentUser.fullName}] requested ${quantity} cards.`);
     closeModal('staff-request-modal');
-    showToast('Card request submitted successfully for approval!', 'success');
+    showToast(currentLang === 'ar' ? 'تم إرسال الطلب وإشعار الإدارة فورياً!' : currentLang === 'ku' ? 'داواکاری هاتە هنارتن و ئاگەهداری گەهشت!' : 'Card request submitted & notification sent!', 'success');
     
     if (currentUser.role === 'requester') {
       loadRequesterHistory();
